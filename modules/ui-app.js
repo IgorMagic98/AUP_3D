@@ -781,19 +781,21 @@ class UIApp {
       ),
     };
   }
+
+  // === МЕТОДЫ-ОБЁРТКИ ДЛЯ TREE.JS ===
+    openEditModal(id) { this.editor.openEditModal(id); }
+    openPipelineEditModal(id) { this.editor.openPipelineEditModal(id); }
+    openRowEditModal(id) { this.editor.openRowEditModal(id); }
+    openValveEditModal(id) { this.editor.openValveEditModal(id); }
+    startAttachMode(obj) { this.editor.startAttachMode(obj); }
+    startDuplicateMode(obj) { this.editor.startDuplicateMode(obj); }
+    openSplitPipelineModal(id) { this.split.openPipelineModal(id); }
+    highlightEntireObject(obj) { this.visuals.highlightEntireObject(obj); }
+    highlightSingleMesh(mesh) { this.visuals.highlightSingleMesh(mesh); }
+    unhighlightAll() { this.visuals.unhighlightAll(); }
+    focusObject(obj) { this.visuals.focusObject(obj); }
+
+
 }
 
 const UI = new UIApp();
-
-// Добавляем методы-обёртки к существующему экземпляру UI
-UI.unhighlightAll = () => UI.visuals.unhighlightAll();
-UI.highlightEntireObject = (obj) => UI.visuals.highlightEntireObject(obj);
-UI.highlightSingleMesh = (mesh) => UI.visuals.highlightSingleMesh(mesh);
-UI.focusObject = (obj) => UI.visuals.focusObject(obj);
-UI.openEditModal = (id) => UI.editor.openEditModal(id);
-UI.openPipelineEditModal = (id) => UI.editor.openPipelineEditModal(id);
-UI.openRowEditModal = (id) => UI.editor.openRowEditModal(id);
-UI.openValveEditModal = (id) => UI.editor.openValveEditModal(id);
-UI.startAttachMode = (obj) => UI.editor.startAttachMode(obj);
-UI.startDuplicateMode = (obj) => UI.editor.startDuplicateMode(obj);
-UI.openSplitPipelineModal = (id) => UI.split.openPipelineModal(id);
