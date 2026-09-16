@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Модуль построения конфигурации АУП в 3D</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-dark m-0 p-0">
+  <div class="container-fluid p-0">
+    <div class="ribbon-wrapper">
+      <div class="ribbon-bar">
+        <div class="ribbon-section">
+          <div class="ribbon-btn-group">
+            <button class="btn-ribbon" id="menuNew">Новый проект...</button>
+            <button class="btn-ribbon" id="menuOpen">Открыть...</button>
+            <button class="btn-ribbon" id="menuSave">Сохранить...</button>
+          </div>
+          <div class="ribbon-title">Проект расчета</div>
+        </div>
+        <div class="ribbon-section">
+          <div class="ribbon-btn-group">
+            <button class="btn-ribbon" id="menuCreatePipeline">Создать...</button>
+            <button class="btn-ribbon" id="menuSplitSegment">Разбить участок...</button>
+            <button class="btn-ribbon" id="menuSplitPipeline">Разбить трубопровод...</button>
+            <button class="btn-ribbon" id="menuDuplicateObject">Копировать...</button>
+            <div style="height:1px;background:rgba(255,255,255,0.3);margin:4px 0;width:100%;"></div>
+            <button class="btn-ribbon" id="menuConnectPoints">Соединить узлы...</button>
+            <button class="btn-ribbon" id="menuConnectBranches">Соединить ветки...</button>
+          </div>
+          <div class="ribbon-title">Трубопровод</div>
+        </div>
+        <div class="ribbon-section">
+          <div class="ribbon-btn-group">
+            <button class="btn-ribbon" id="menuCreateBranch">Создать...</button>
+            <button class="btn-ribbon" id="menuDuplicateBranch">Копировать...</button>
+          </div>
+          <div class="ribbon-title">Ветка</div>
+        </div>
+        <div class="ribbon-section">
+          <div class="ribbon-btn-group">
+            <button class="btn-ribbon" id="menuCreateRow">Создать...</button>
+            <button class="btn-ribbon" id="menuDuplicateRow">Копировать...</button>
+          </div>
+          <div class="ribbon-title">Рядок</div>
+        </div>
+        <div class="ribbon-section wide-armatura">
+          <div class="ribbon-grid-armatura">
+            <button class="btn-ribbon" id="arm_valve">Узел управления...</button>
+            <button class="btn-ribbon" id="arm_gate">Задвижка/затвор...</button>
+            <button class="btn-ribbon" id="arm_check">Клапан обратный...</button>
+            <button class="btn-ribbon" id="arm_filter">Фильтр...</button>
+            <button class="btn-ribbon" id="arm_reg">Регулятор давления...</button>
+          </div>
+          <div class="ribbon-title">Трубопроводная арматура</div>
+        </div>
+        <div class="ribbon-section">
+          <div class="ribbon-btn-group">
+            <button class="btn-ribbon" id="src_tank">Резервуар...</button>
+            <button class="btn-ribbon" id="src_city">Параметры гор. водоснабж.</button>
+            <button class="btn-ribbon" id="src_pump">Насос...</button>
+          </div>
+          <div class="ribbon-title">Источники</div>
+        </div>
+        <div class="ribbon-section">
+          <div class="ribbon-btn-group">
+            <button class="btn-ribbon" id="menuSceneSettings">Параметры сцены...</button>
+            <button class="btn-ribbon" id="menuRunCalc">Запуск расчета...</button>
+          </div>
+          <div class="ribbon-title">Расчет</div>
+        </div>
+        <div class="ribbon-section">
+          <div class="ribbon-btn-group">
+            <button class="btn-ribbon" id="menuShowGraph">📊 Граф сети...</button>
+            <button class="btn-ribbon" id="menuShowAutoConnections">⚡ Авто-связи...</button>
+          </div>
+          <div class="ribbon-title">Результаты</div>
+        </div>
+        <div class="ribbon-section">
+          <div class="ribbon-btn-group">
+            <button class="btn-ribbon" id="menuResetView">Сбросить вид</button>
+            <button class="btn-ribbon" id="menuToggleGrid">Сетка: Вкл/Выкл</button>
+            <button class="btn-ribbon" id="menuTopView">Вид сверху</button>
+            <button class="btn-ribbon" id="menuToggleCameraMode">Перспектива/Орто</button>
+            <button class="btn-ribbon" id="menuToggleConnectionPoints">Узлы: Вкл/Выкл</button>
+            <button class="btn-ribbon" id="menuToggleDiameters">Диаметры: Вкл/Выкл</button>
+          </div>
+          <div class="ribbon-title">Вид</div>
+        </div>
+        <div class="flex-grow-1" style="background-color: #000080;"></div>
+      </div>
+    </div>
+  </div>
+  <div id="projectInfo">
+    <div class="project-name" id="projectNameDisplay">Нет проекта</div>
+    <div class="project-path" id="projectPathDisplay"></div>
+  </div>
+  <div id="treePanel">
+    <div class="panel-header"><span>Дерево</span><span class="count" id="objectCount">0</span></div>
+    <div id="treeContainer">
+      <div class="tree-empty">Сцена пуста.<br>Используйте меню для добавления объектов.</div>
+    </div>
+  </div>
+  <div id="ui">
+    <input type="number" id="planeWidth" value="50" min="2" max="200">
+    <input type="number" id="planeDepth" value="50" min="2" max="200">
+    <input type="number" id="axesSizeInput" value="2" min="0.1" max="50" step="0.1">
+  </div>
+  <div id="pipelineBuilder">
+    <div class="pipeline-header" id="pipelineDragHandle">
+      <span class="title">▼ Построение трубопровода</span>
+      <span class="hint">⇲ перетащите</span>
+    </div>
+    <div class="pipeline-body">
+      <div class="step">
+        <span>Начальная точка:</span>
+        <input type="number" id="pbCX" value="0" step="0.1">
+        <input type="number" id="pbCY" value="0" step="0.1">
+        <input type="number" id="pbCZ" value="0" step="0.1">
+      </div>
+      <div class="step">
+        <span>Ось:</span>
+        <button class="axis-btn" data-axis="x">X</button>
+        <button class="axis-btn active" data-axis="y">Y</button>
+        <button class="axis-btn" data-axis="z">Z</button>
+        <span style="margin-left:10px">Направление</span>
+        <button class="dir-btn active" data-dir="+">+</button>
+        <button class="dir-btn" data-dir="-">-</button>
+      </div>
+      <div class="step">
+        <span>Длина, м</span>
+        <input type="number" id="pbLength" value="5" step="0.1" min="0.1" max="100">
+        <span>DN</span>
+        <select id="pbDiameter">
+          <option value="15">15</option>
+          <option value="20">20</option>
+          <option value="25" selected>25</option>
+          <option value="32">32</option>
+          <option value="40">40</option>
+          <option value="50">50</option>
+          <option value="65">65</option>
+          <option value="80">80</option>
+          <option value="100">100</option>
+          <option value="125">125</option>
+          <option value="150">150</option>
+          <option value="200">200</option>
+        </select>
+      </div>
+      <div class="step">
+        <button class="confirm" id="pbConfirm">Добавить</button>
+        <button class="finish" id="pbFinish">Готово</button>
+        <button class="cancel" id="pbCancel">Отмена</button>
+      </div>
+      <div class="pipeline-stats">
+        <div>Участков: <span id="pbSegmentCount">0</span></div>
+        <div>Длина: <span id="pbTotalLength">0.00</span> м</div>
+      </div>
+      <div id="pipelineSegmentsList"></div>
+    </div>
+  </div>
+  <div id="toolbar">
+    <button id="resetViewBtn">Сброс вида</button>
+    <button id="toggleGridBtn">Сетка: Вкл</button>
+    <button id="topViewBtn">Вид сверху</button>
+    <button id="toggleConnectionPointsBtn">Узлы: Вкл</button>
+    <button id="toggleDiametersBtn">Диаметры: Вкл</button>
+  </div>
+  <div id="newProjectModal" class="edit-modal">
+    <div class="modal-content" style="width: 500px;">
+      <h3>📁 Создание нового проекта</h3>
+      <div class="modal-section">
+        <h4>Выберите папку для проекта</h4>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="text" id="projectFolderPath" placeholder="Папка не выбрана"
+            style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" readonly>
+          <button id="selectFolderBtn"
+            style="padding: 8px 16px; background: #1976d2; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Выбрать
+            папку</button>
+        </div>
+        <div class="warning" style="margin-top: 8px;">⚠️ В выбранной папке будет создана подпапка с именем проекта</div>
+      </div>
+      <div class="modal-section">
+        <h4>Имя проекта</h4>
+        <div class="modal-row" style="flex-direction: column; align-items: stretch;">
+          <input type="text" id="projectNameInput" placeholder="Введите имя проекта"
+            style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" id="newProjectCancelBtn">Отмена</button>
+        <button class="btn-apply" id="newProjectCreateBtn">Создать проект</button>
+      </div>
+    </div>
+  </div>
+  <div id="sceneSettingsModal" class="edit-modal">
+    <div class="modal-content">
+      <h3>Настройки сцены...</h3>
+      <div class="modal-section">
+        <h4>Основание, м</h4>
+        <div class="modal-row"><label>Ширина X:</label><input type="number" id="scenePlaneWidth" value="50" min="2"
+            max="200" step="1"></div>
+        <div class="modal-row"><label>Глубина Z:</label><input type="number" id="scenePlaneDepth" value="50" min="2"
+            max="200" step="1"></div>
+      </div>
+      <div class="modal-section">
+        <h4>Размер осей, м</h4>
+        <div class="modal-row"><label>Размер:</label><input type="number" id="sceneAxesSize" value="2" min="0.1"
+            max="50" step="0.1"></div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" id="sceneSettingsCancelBtn">Отмена</button>
+        <button class="btn-apply" id="sceneSettingsApplyBtn">Применить</button>
+      </div>
+    </div>
+  </div>
+  <div id="createBranchModal" class="edit-modal">
+    <div class="modal-content">
+      <h3>Ветка</h3>
+      <div class="modal-section">
+        <h4>Количество оросителей</h4>
+        <div class="spr-row"><input type="number" id="createBranchSprCount" min="1" max="50" value="4"><button
+            id="createBranchUpdateBtn">Обновить</button></div>
+      </div>
+      <div class="modal-section">
+        <h4>Участки</h4>
+        <div class="segment-header"><span>№</span><span>Длина, м</span><span>DN</span></div>
+        <div id="createBranchInputs"></div>
+        <div class="total-length">Общая: <span id="createBranchTotalLength">0.00</span> м</div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" id="createBranchCancelBtn">Отмена</button>
+        <button class="btn-apply" id="createBranchApplyBtn">Создать</button>
+      </div>
+    </div>
+  </div>
+  <div id="createRowModal" class="edit-modal">
+    <div class="modal-content">
+      <h3>Рядок</h3>
+      <div class="row-sides">
+        <div class="row-side">
+          <h5>Слева</h5>
+          <div class="spr-row"><input type="number" id="createRowLeftCount" min="0" max="30" value="3"><button
+              id="createRowUpdateLeftBtn">Обновить</button></div>
+          <div class="segment-header"><span>#</span><span>Длина, м</span><span>DN</span></div>
+          <div id="createRowLeftInputs"></div>
+        </div>
+        <div class="row-side right">
+          <h5>Справа</h5>
+          <div class="spr-row"><input type="number" id="createRowRightCount" min="0" max="30" value="3"><button
+              id="createRowUpdateRightBtn">Обновить</button></div>
+          <div class="segment-header"><span>#</span><span>Длина, м</span><span>DN</span></div>
+          <div id="createRowRightInputs"></div>
+        </div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" id="createRowCancelBtn">Отмена</button>
+        <button class="btn-apply" id="createRowApplyBtn">Создать</button>
+      </div>
+    </div>
+  </div>
+  <div id="editModal" class="edit-modal">
+    <div class="modal-content">
+      <h3>Ветка №<span id="editBranchId"></span></h3>
+      <div class="modal-section">
+        <h4>Позиция</h4>
+        <div class="modal-row"><label>X:</label><input type="number" id="editPosX" step="0.1"></div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="editPosY" step="0.1"></div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="editPosZ" step="0.1"></div>
+      </div>
+      <div class="modal-section">
+        <h4>Поворот, град</h4>
+        <div class="modal-row"><label>X:</label><input type="number" id="editRotX" step="15" style="width:60px"><button
+            class="rot-btn" data-target="branch" data-axis="x" data-angle="90">+90</button><button class="rot-btn"
+            data-target="branch" data-axis="x" data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="editRotY" step="15" style="width:60px"><button
+            class="rot-btn" data-target="branch" data-axis="y" data-angle="90">+90</button><button class="rot-btn"
+            data-target="branch" data-axis="y" data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="editRotZ" step="15" style="width:60px"><button
+            class="rot-btn" data-target="branch" data-axis="z" data-angle="90">+90</button><button class="rot-btn"
+            data-target="branch" data-axis="z" data-angle="-90">-90</button></div>
+        <button id="editResetRotBtn"
+          style="width:100%;padding:4px;font-size:11px;background:#0f1379;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-top:6px">Сбросить</button>
+      </div>
+      <div class="modal-section">
+        <h4>Оросителей</h4>
+        <div class="spr-row"><input type="number" id="editSprCount" min="1" max="50" value="4"><button
+            id="editUpdateSprBtn">Обновить</button></div>
+        <div class="segment-header"><span>#</span><span>Длина, м</span><span>DN</span></div>
+        <div id="editSegmentInputs"></div>
+        <div class="edit-total">📏 <span id="editTotalLength">0.00</span> м</div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" id="editCancelBtn">Отмена</button>
+        <button class="btn-apply" id="editApplyBtn">Применить</button>
+        <button class="btn-delete" id="editDeleteBtn">Удалить</button>
+      </div>
+    </div>
+  </div>
+  <div id="editRowModal" class="edit-modal">
+    <div class="modal-content">
+      <h3>Рядок №<span id="editRowId"></span></h3>
+      <div class="modal-section">
+        <h4>Позиция</h4>
+        <div class="modal-row"><label>X:</label><input type="number" id="rowEditPosX" step="0.1"></div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="rowEditPosY" step="0.1"></div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="rowEditPosZ" step="0.1"></div>
+      </div>
+      <div class="modal-section">
+        <h4>Поворот (°)</h4>
+        <div class="modal-row"><label>X:</label><input type="number" id="rowEditRotX" step="15"
+            style="width:60px"><button class="rot-btn" data-target="row" data-axis="x"
+            data-angle="90">+90</button><button class="rot-btn" data-target="row" data-axis="x"
+            data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="rowEditRotY" step="15"
+            style="width:60px"><button class="rot-btn" data-target="row" data-axis="y"
+            data-angle="90">+90</button><button class="rot-btn" data-target="row" data-axis="y"
+            data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="rowEditRotZ" step="15"
+            style="width:60px"><button class="rot-btn" data-target="row" data-axis="z"
+            data-angle="90">+90</button><button class="rot-btn" data-target="row" data-axis="z"
+            data-angle="-90">-90</button></div>
+        <button id="rowEditResetRotBtn"
+          style="width:100%;padding:4px;font-size:11px;background:#0f1379;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-top:6px">Сбросить</button>
+      </div>
+      <div class="modal-section">
+        <h4>Слева</h4>
+        <div class="spr-row"><input type="number" id="rowEditLeftCount" min="0" max="30" value="3"><button
+            id="rowEditUpdateLeftBtn">Обновить</button></div>
+        <div class="segment-header"><span>#</span><span>Длина, м</span><span>DN</span></div>
+        <div id="rowEditLeftInputs"></div>
+      </div>
+      <div class="modal-section">
+        <h4>Справа</h4>
+        <div class="spr-row"><input type="number" id="rowEditRightCount" min="0" max="30" value="3"><button
+            id="rowEditUpdateRightBtn">Обновить</button></div>
+        <div class="segment-header"><span>#</span><span>Длина, м</span><span>DN</span></div>
+        <div id="rowEditRightInputs"></div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" id="rowEditCancelBtn">Отмена</button>
+        <button class="btn-apply" id="rowEditApplyBtn">Применить</button>
+        <button class="btn-delete" id="rowEditDeleteBtn">Удалить</button>
+      </div>
+    </div>
+  </div>
+  <div id="editPipelineModal" class="edit-modal">
+    <div class="modal-content">
+      <h3>Трубопровод №<span id="editPipeId"></span></h3>
+      <div class="modal-section" style="background:#a3acff;border:1px solid #8093ff">
+        <h4 style="color:#0f1379">Узел подключения (первая точка)</h4>
+        <div class="modal-row"><label>X:</label><input type="number" id="pipeNodeX" step="0.1"></div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="pipeNodeY" step="0.1"></div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="pipeNodeZ" step="0.1"></div>
+        <div class="warning">Изменение узла сдвинет весь трубопровод</div>
+      </div>
+      <div class="modal-section">
+        <h4>Поворот, град</h4>
+        <div class="modal-row"><label>X:</label><input type="number" id="pipeEditRotX" step="15"
+            style="width:60px"><button class="rot-btn" data-target="pipe" data-axis="x"
+            data-angle="90">+90</button><button class="rot-btn" data-target="pipe" data-axis="x"
+            data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="pipeEditRotY" step="15"
+            style="width:60px"><button class="rot-btn" data-target="pipe" data-axis="y"
+            data-angle="90">+90</button><button class="rot-btn" data-target="pipe" data-axis="y"
+            data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="pipeEditRotZ" step="15"
+            style="width:60px"><button class="rot-btn" data-target="pipe" data-axis="z"
+            data-angle="90">+90</button><button class="rot-btn" data-target="pipe" data-axis="z"
+            data-angle="-90">-90</button></div>
+        <button id="pipeEditResetRotBtn"
+          style="width:100%;padding:4px;font-size:11px;background:#0f1379;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-top:6px">Сбросить</button>
+      </div>
+      <div class="modal-section">
+        <h4>Участки</h4>
+        <div class="segment-header" style="grid-template-columns:30px 1fr 80px 30px"><span>№</span><span>Длина,
+            м</span><span>DN</span><span></span></div>
+        <div id="pipeEditSegments"></div>
+        <div class="edit-total"><span id="pipeEditTotalLength">0.00</span> м | Участков: <span
+            id="pipeEditSegCount">0</span></div>
+        <div class="pipe-edit-actions"><button id="pipeEditAddSegBtn">Добавить участок</button></div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" id="pipeEditCancelBtn">Отмена</button>
+        <button class="btn-apply" id="pipeEditApplyBtn">Применить</button>
+        <button class="btn-delete" id="pipeEditDeleteBtn">Удалить</button>
+      </div>
+    </div>
+  </div>
+  <div id="splitPipelineModal" class="edit-modal">
+    <div class="modal-content">
+      <h3>Разбить трубопровод №<span id="splitPipeId"></span></h3>
+      <div class="modal-section" style="background:#e3f2fd;border:1px solid #90caf9">
+        <h4 style="color:#1565c0">📊 Информация</h4>
+        <div class="modal-row"><label>Оригинал:</label><span id="splitOrigInfo">0 участков, 0.00 м</span></div>
+        <div class="modal-row"><label>Общая длина:</label><strong><span id="splitTotalLength">0.00</span> м</strong>
+        </div>
+      </div>
+      <div class="modal-section">
+        <h4>Параметры разбиения</h4>
+        <div class="modal-row"><label>Участков:</label><input type="number" id="splitSegCount" min="1" max="50"
+            value="3" style="width:60px"><button id="splitUpdateBtn"
+            style="padding:4px 10px;font-size:11px;background:#1976d2;color:#fff;border:none;border-radius:3px;cursor:pointer">Обновить</button><button
+            id="splitEqualBtn"
+            style="padding:4px 10px;font-size:11px;background:#ff9800;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-left:4px">Равномерно</button>
+        </div>
+      </div>
+      <div class="modal-section">
+        <h4>Участки</h4>
+        <div class="segment-header"><span>#</span><span>Длина, м</span><span>⌀ DN</span></div>
+        <div id="splitInputs"></div>
+        <div class="edit-total">📏 Сумма: <span id="splitSumLength">0.00</span> м | <span id="splitDiffInfo"
+            style="color:#d32f2f"></span></div>
+      </div>
+      <div class="warning" id="splitWarning" style="display:none">⚠️ Сумма длин не совпадает</div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" id="splitCancelBtn">Отмена</button>
+        <button class="btn-apply" id="splitApplyBtn">Разбить</button>
+      </div>
+    </div>
+  </div>
+  <div id="splitSegmentModal" class="edit-modal">
+    <div class="modal-content">
+      <h3>Разбить сегмент #<span id="splitSegIndex"></span> трубопровода №<span id="splitSegPipelineId"></span></h3>
+      <div class="modal-section" style="background:#e3f2fd;border:1px solid #90caf9">
+        <h4 style="color:#1565c0">📊 Информация</h4>
+        <div class="modal-row"><label>Длина:</label><strong><span id="splitSegOrigLength">0.00</span> м</strong></div>
+        <div class="modal-row"><label>Диаметр:</label><span>⌀ <span id="splitSegDiameter">0</span> мм</span></div>
+      </div>
+      <div class="modal-section">
+        <h4>Параметры</h4>
+        <div class="modal-row"><label>Участков:</label><input type="number" id="splitSegCountInput" min="1" max="50"
+            value="2" style="width:60px"><button id="splitSegUpdateBtn"
+            style="padding:4px 10px;font-size:11px;background:#1976d2;color:#fff;border:none;border-radius:3px;cursor:pointer">Обновить</button><button
+            id="splitSegEqualBtn"
+            style="padding:4px 10px;font-size:11px;background:#ff9800;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-left:4px">Равномерно</button>
+        </div>
+      </div>
+      <div class="modal-section">
+        <h4>Участки</h4>
+        <div class="segment-header"><span>#</span><span>Длина, м</span><span>⌀ DN</span></div>
+        <div id="splitSegInputs"></div>
+        <div class="edit-total">📏 Сумма: <span id="splitSegSumLength">0.00</span> м | <span id="splitSegDiffInfo"
+            style="color:#d32f2f"></span></div>
+      </div>
+      <div class="warning" id="splitSegWarning" style="display:none">⚠️ Сумма не совпадает</div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" id="splitSegCancelBtn">Отмена</button>
+        <button class="btn-apply" id="splitSegApplyBtn">Разбить</button>
+      </div>
+    </div>
+  </div>
+  <div id="editValveModal" class="edit-modal">
+    <div class="modal-content">
+      <h3>Узел управления №<span id="editValveId"></span></h3>
+      <div class="modal-section" style="background:#fff3e0;border:1px solid #ffcc80">
+        <h4 style="color:#e65100">Положение узла управления</h4>
+        <div class="modal-row"><label>X:</label><input type="number" id="valveEditPosX" step="0.1" style="width:100px">
+        </div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="valveEditPosY" step="0.1" style="width:100px">
+        </div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="valveEditPosZ" step="0.1" style="width:100px">
+        </div>
+        <div class="warning">Изменение положения сдвинет весь узел управления</div>
+      </div>
+      <div class="modal-section">
+        <h4>Параметры</h4>
+        <div class="modal-row"><label>Длина:</label><input type="number" id="valveEditLength" step="0.1" min="0.1"
+            max="10" style="width:100px"><span style="margin-left:10px">м</span></div>
+        <div class="modal-row"><label>Диаметр:</label><input type="number" id="valveEditDiameter" step="1" min="15"
+            max="400" style="width:100px"><span style="margin-left:10px">мм</span></div>
+      </div>
+      <div class="modal-section">
+        <h4>Поворот, град</h4>
+        <div class="modal-row"><label>X:</label><input type="number" id="valveEditRotX" step="15"
+            style="width:60px"><button class="rot-btn" data-target="valve" data-axis="x"
+            data-angle="90">+90</button><button class="rot-btn" data-target="valve" data-axis="x"
+            data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="valveEditRotY" step="15"
+            style="width:60px"><button class="rot-btn" data-target="valve" data-axis="y"
+            data-angle="90">+90</button><button class="rot-btn" data-target="valve" data-axis="y"
+            data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="valveEditRotZ" step="15"
+            style="width:60px"><button class="rot-btn" data-target="valve" data-axis="z"
+            data-angle="90">+90</button><button class="rot-btn" data-target="valve" data-axis="z"
+            data-angle="-90">-90</button></div>
+        <button id="valveEditResetRotBtn"
+          style="width:100%;padding:4px;font-size:11px;background:#0f1379;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-top:6px">Сбросить
+          поворот</button>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" id="valveEditCancelBtn">Отмена</button>
+        <button class="btn-apply" id="valveEditApplyBtn">Применить</button>
+        <button class="btn-delete" id="valveEditDeleteBtn">Удалить</button>
+      </div>
+    </div>
+  </div>
+  <div id="networkGraphModal" class="edit-modal">
+    <div class="modal-content" style="width:90vw;max-width:1200px;height:85vh;display:flex;flex-direction:column">
+      <h3>📊 Граф сети</h3>
+      <div
+        style="display:flex;gap:8px;margin-bottom:10px;align-items:center;border-bottom:1px solid #ddd;padding-bottom:8px">
+        <button id="graphTabSchema" class="graph-tab active">🗺️ Схема</button>
+        <button id="graphTabTable" class="graph-tab">📋 Таблица</button>
+        <button id="graphTabExport" class="graph-tab">💾 Экспорт</button>
+        <span style="margin-left:auto;font-size:11px;color:#666">Узлов: <strong id="graphNodeCount">0</strong> | Рёбер:
+          <strong id="graphEdgeCount">0</strong></span>
+      </div>
+      <div id="graphSchemaView" class="graph-view active" style="display:flex;flex-direction:column;flex:1">
+        <div style="position:relative;flex:1;display:flex;flex-direction:column">
+          <div style="position:absolute;top:8px;right:8px;z-index:5;display:flex;flex-direction:column;gap:4px">
+            <button id="graphZoomIn" class="graph-ctrl-btn">➕</button>
+            <button id="graphZoomOut" class="graph-ctrl-btn">➖</button>
+            <button id="graphZoomReset" class="graph-ctrl-btn">🏠</button>
+            <button id="graphZoomFit" class="graph-ctrl-btn">⊞</button>
+          </div>
+          <div
+            style="position:absolute;bottom:8px;right:8px;z-index:5;background:rgba(255,255,255,.9);padding:3px 8px;border-radius:4px;font-size:10px;color:#666;border:1px solid #ddd">
+            Масштаб: <strong id="graphZoomLevel">100%</strong>
+          </div>
+          <svg id="graphSvg" style="width:100%;flex:1;background:#fafafa;border:1px solid #ddd;border-radius:4px">
+            <g id="graphGroup"></g>
+          </svg>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:#666;display:flex;gap:16px;flex-wrap:wrap">
+          <span>🔵 Трубопровод</span><span>🟢 Ветка</span><span>🟠 Рядок</span><span>🔗 Привязка</span><span
+            style="color:#ff9800">⚡ Авто</span>
+        </div>
+      </div>
+      <div id="graphTableView" class="graph-view" style="flex:1;overflow:hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;height:100%">
+          <div style="overflow-y:auto;border:1px solid #ddd;border-radius:4px">
+            <h4 style="padding:8px;background:#e3f2fd;margin:0;font-size:12px">🔷 Узлы</h4>
+            <table id="graphNodesTable" style="width:100%;font-size:11px;border-collapse:collapse">
+              <thead>
+                <tr style="background:#f5f5f5">
+                  <th style="padding:4px;text-align:left">ID</th>
+                  <th>Тип</th>
+                  <th>Позиция</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div style="overflow-y:auto;border:1px solid #ddd;border-radius:4px">
+            <h4 style="padding:8px;background:#fff3e0;margin:0;font-size:12px">🔗 Рёбра</h4>
+            <table id="graphEdgesTable" style="width:100%;font-size:11px;border-collapse:collapse">
+              <thead>
+                <tr style="background:#f5f5f5">
+                  <th style="padding:4px;text-align:left">От</th>
+                  <th>К</th>
+                  <th>Тип</th>
+                  <th>Длина/DN</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div id="graphExportView" class="graph-view" style="flex:1;overflow:hidden">
+        <div style="display:flex;flex-direction:column;height:100%">
+          <h4 style="font-size:12px;margin-bottom:6px">JSON</h4>
+          <textarea id="graphJsonOutput" readonly
+            style="width:100%;flex:1;font-family:monospace;font-size:10px;padding:6px;border:1px solid #ddd;border-radius:4px;resize:none"></textarea>
+          <button id="graphCopyJson"
+            style="margin-top:4px;padding:4px 10px;font-size:11px;background:#1976d2;color:#fff;border:none;border-radius:3px;cursor:pointer">📋
+            Копировать</button>
+        </div>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-cancel" id="graphCloseBtn">Закрыть</button>
+        <button class="btn-apply" id="graphDownloadBtn">💾 Скачать JSON</button>
+      </div>
+    </div>
+  </div>
+  <canvas id="renderCanvas"></canvas>
+  <div id="status"></div>
+
+  <script src="state.js"></script>
+  <script src="engine.js"></script>
+  <script src="factory.js"></script>
+  <script src="world.js"></script>
+  <script src="tree.js"></script>
+  <script src="modules/project-manager.js"></script>
+  <script src="modules/scene-manager.js"></script>
+  <script src="modules/pipeline-builder.js"></script>
+  <script src="modules/object-editor.js"></script>
+  <script src="modules/split-manager.js"></script>
+  <script src="modules/network-graph.js"></script>
+  <script src="modules/input-handler.js"></script>
+  <script src="modules/visual-effects.js"></script>
+  <script src="modules/ui-app.js"></script>
+
+  <script>
+  addEventListener('load', () => {
+    if (typeof THREE === 'undefined') return;
+    setTimeout(() => {
+        UI.init(); // Здесь уже вызывается Engine.init()
+        Engine.animate();
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) loadingEl.classList.add('hidden');
+        Utils.showStatus('Готов');
+    }, 200);
+});
+  </script> 
+</body>
+
+</html>
