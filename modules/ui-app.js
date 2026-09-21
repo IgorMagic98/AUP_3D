@@ -7,8 +7,10 @@ class UIApp {
     this.editor = new ObjectEditor();
     this.split = new SplitManager();
     this.graph = new NetworkGraph();
-    this.input = null;
     this.visuals = new VisualEffects();
+    this.armature = new Armature(); 
+    this.input = null;
+    
   }
 
   init() {
@@ -104,24 +106,60 @@ class UIApp {
       else Utils.showStatus("Выберите рядок в дереве");
     };
 
-    document.getElementById("arm_valve").onclick = () => {
-      STATE.insertValveMode = !STATE.insertValveMode;
-      const btn = document.getElementById("arm_valve");
-      if (STATE.insertValveMode) {
-        btn.classList.add("active");
-        Utils.showStatus(
-          "🔧 Режим вставки узла управления АКТИВЕН. Кликните по участку трубопровода для разбивки.",
-        );
-      } else {
-        btn.classList.remove("active");
-        Utils.showStatus("Режим вставки узла управления отключен.");
-      }
+    // document.getElementById("arm_valve").onclick = () => {
+    //   STATE.insertValveMode = !STATE.insertValveMode;
+    //   const btn = document.getElementById("arm_valve");
+    //   if (STATE.insertValveMode) {
+    //     btn.classList.add("active");
+    //     Utils.showStatus(
+    //       "🔧 Режим вставки узла управления АКТИВЕН. Кликните по участку трубопровода для разбивки.",
+    //     );
+    //   } else {
+    //     btn.classList.remove("active");
+    //     Utils.showStatus("Режим вставки узла управления отключен.");
+    //   }
+    // };
+
+    // ["arm_gate", "arm_check", "arm_filter", "arm_reg"].forEach((id) => {
+    //   document.getElementById(id).onclick = () =>
+    //     Utils.showStatus("Функция добавления арматуры находится в разработке");
+    // });
+
+        // === КНОПКИ АРМАТУРЫ (НОВЫЙ УНИВЕРСАЛЬНЫЙ КОД) ===
+    const armatureButtons = {
+      'arm_valve': 'valve',
+      'arm_gate': 'gate',
+      'arm_check': 'check',
+      'arm_filter': 'filter',
+      'arm_reg': 'reg'
     };
 
-    ["arm_gate", "arm_check", "arm_filter", "arm_reg"].forEach((id) => {
-      document.getElementById(id).onclick = () =>
-        Utils.showStatus("Функция добавления арматуры находится в разработке");
+    Object.entries(armatureButtons).forEach(([btnId, armatureType]) => {
+      document.getElementById(btnId).onclick = () => {
+        if (STATE.insertArmatureMode === armatureType) {
+          // Если уже выбран этот тип — отключаем режим
+          STATE.insertArmatureMode = null;
+          document.getElementById(btnId).classList.remove('active');
+          Utils.showStatus('Режим вставки арматуры отключен');
+        } else {
+          // Выбираем новый тип
+          STATE.insertArmatureMode = armatureType;
+          
+          // Снимаем выделение со всех кнопок арматуры
+          Object.keys(armatureButtons).forEach(id => {
+            document.getElementById(id).classList.remove('active');
+          });
+          
+          // Выделяем нажатую кнопку
+          document.getElementById(btnId).classList.add('active');
+          
+          // Показываем подсказку из класса Armature
+          const name = this.armature.getTypeInfo(armatureType).name;
+          Utils.showStatus(`🔧 ${name}. Кликните по трубе.`);
+        }
+      };
     });
+
 
     ["src_tank", "src_city", "src_pump"].forEach((id) => {
       document.getElementById(id).onclick = () =>

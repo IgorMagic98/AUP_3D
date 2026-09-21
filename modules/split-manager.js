@@ -360,6 +360,7 @@ class SplitManager {
         document.getElementById('splitPipelineModal').classList.remove('active');
     }
 
+
     insertValveAt(segHit) {
         const seg = segHit.object;
         const pipelineId = seg.userData.pipelineId;
@@ -375,46 +376,71 @@ class SplitManager {
         const startPoint = new THREE.Vector3(segData.startPos.x, segData.startPos.y, segData.startPos.z);
         const endPoint = new THREE.Vector3(segData.endPos.x, segData.endPos.y, segData.endPos.z);
         
-        const localPoint = segHit.point.clone();
-        localPoint.sub(pipeline.root.position);
+        // Направление сегмента
+        const direction = new THREE.Vector3().subVectors(endPoint, startPoint).normalize();
+        const segLength = startPoint.distanceTo(endPoint);
         
-        const t = Math.max(0, Math.min(1, 
-            localPoint.clone().sub(startPoint).length() / startPoint.distanceTo(endPoint)
-        ));
-        const splitPoint = startPoint.clone().lerp(endPoint, t);
+        // Точка клика в мировых координатах
+        const worldHitPoint = segHit.point.clone();
+        
+        // Переводим в локальные координаты трубопровода
+        const localHitPoint = worldHitPoint.clone().sub(pipeline.root.position);
+        
+        // Вычисляем параметр t (от 0 до 1) - где на сегменте произошел клик
+        const hitVector = new THREE.Vector3().subVectors(localHitPoint, startPoint);
+        const t = Math.max(0.1, Math.min(0.9, hitVector.dot(direction) / segLength));
+        
+        // Длина узла управления
+        const valveLength = 1.0;
+        const halfValveLength = valveLength / 2;
+        
+        // Точка установки узла (центр)
+        const valveCenter = startPoint.clone().add(direction.clone().multiplyScalar(t * segLength));
+        
+        // Начало и конец узла управления
+        const valveStart = valveCenter.clone().sub(direction.clone().multiplyScalar(halfValveLength));
+        const valveEnd = valveCenter.clone().add(direction.clone().multiplyScalar(halfValveLength));
         
         const diameter = segData.diameter;
-        const valveLength = 1;
         
-        STATE.objectCounter++;
-        STATE.pipelineCounter++;
-        STATE.valveCounter++;
-        
-        const newStartNodeId = segData.startNodeId;
-        const valveInNodeId = genNodeId();
-        const valveOutNodeId = genNodeId();
-        const newEndNodeId = segData.endNodeId;
-        
+        // Создаем два новых сегмента с учетом длины узла
         const newSeg1 = {
+            startPos: { x: startPoint.x, y: startPoint.y, z: startPoint.z },
+            endPos: { x: valveStart.x, y: valveStart.y, z: valveStart.z },
             start: startPoint.clone(),
-            end: splitPoint.clone(),
+            end: valveStart.clone(),
             diameter: diameter,
-            startNodeId: newStartNodeId,
-            endNodeId: valveInNodeId
+            startNodeId: segData.startNodeId,
+            endNodeId: genNodeId(),
+            length: startPoint.distanceTo(valveStart)
         };
         
         const newSeg2 = {
-            start: splitPoint.clone(),
+            startPos: { x: valveEnd.x, y: valveEnd.y, z: valveEnd.z },
+            endPos: { x: endPoint.x, y: endPoint.y, z: endPoint.z },
+            start: valveEnd.clone(),
             end: endPoint.clone(),
             diameter: diameter,
-            startNodeId: valveOutNodeId,
-            endNodeId: newEndNodeId
+            startNodeId: genNodeId(),
+            endNodeId: segData.endNodeId,
+            length: valveEnd.distanceTo(endPoint)
         };
         
+        // Заменяем исходный сегмент на два новых
         const allSegs = [...pipeline.userData.segments];
         allSegs.splice(segIndex, 1, newSeg1, newSeg2);
         
-        const newPipelineRoot = Factory.createPipeline(allSegs, pipelineId);
+        // Пересоздаем визуальную модель трубопровода
+        const segsForFactory = allSegs.map(s => ({
+            start: s.start ? s.start.clone() : new THREE.Vector3(s.startPos.x, s.startPos.y, s.startPos.z),
+            end: s.end ? s.end.clone() : new THREE.Vector3(s.endPos.x, s.endPos.y, s.endPos.z),
+            diameter: s.diameter,
+            startNodeId: s.startNodeId,
+            endNodeId: s.endNodeId
+        }));
+        
+        const newPipelineRoot = Factory.createPipeline(segsForFactory, pipelineId);
+        
         if (newPipelineRoot) {
             newPipelineRoot.position.copy(pipeline.root.position);
             newPipelineRoot.rotation.copy(pipeline.root.rotation);
@@ -434,8 +460,22 @@ class SplitManager {
             };
         }
         
+        // Создаем узел управления
+        STATE.objectCounter++;
+        STATE.valveCounter++;
+        
         const valve = Factory.createControlValve(valveLength, diameter, STATE.objectCounter);
-        valve.position.copy(splitPoint);
+        
+        // Позиционируем узел управления в точке установки (в мировых координатах)
+        valve.position.copy(valveCenter.clone().add(pipeline.root.position));
+        
+        // Поворачиваем узел управления по направлению сегмента
+        const quaternion = new THREE.Quaternion().setFromUnitVectors(
+            new THREE.Vector3(1, 0, 0),
+            direction
+        );
+        valve.quaternion.copy(quaternion);
+        
         valve.userData.number = STATE.valveCounter;
         
         Engine.scene.add(valve);
@@ -447,9 +487,146 @@ class SplitManager {
         });
         
         STATE.insertValveMode = false;
-        document.getElementById('arm_valve').classList.remove('active');
-        Tree.update();
+        document.getElementById('arm_valve')?.classList.remove('active');
         
+        Tree.update();
         Utils.showStatus(`✓ Участок разбит. Узел управления №${STATE.valveCounter} вставлен.`);
     }
+
+    // insertValveAt(segHit) {
+    //     const seg = segHit.object;
+    //     const pipelineId = seg.userData.pipelineId;
+    //     const segIndex = seg.userData.index;
+    //     const pipeline = STATE.objects.find(o => o.id === pipelineId);
+        
+    //     if (!pipeline || !pipeline.userData.segments[segIndex]) {
+    //         Utils.showStatus('Кликните по участку трубопровода!');
+    //         return;
+    //     }
+        
+    //     const segData = pipeline.userData.segments[segIndex];
+        
+    //     // Проверяем, существуют ли startPos и endPos
+    //     if (!segData.startPos || !segData.endPos) {
+    //         console.error('Сегмент не имеет startPos или endPos:', segData);
+    //         Utils.showStatus('Ошибка: некорректные данные сегмента');
+    //         return;
+    //     }
+        
+    //     const startPoint = new THREE.Vector3(segData.startPos.x, segData.startPos.y, segData.startPos.z);
+    //     const endPoint = new THREE.Vector3(segData.endPos.x, segData.endPos.y, segData.endPos.z);
+        
+    //     // Точка клика в мировых координатах
+    //     const worldHitPoint = segHit.point.clone();
+        
+    //     // Переводим в локальные координаты трубопровода
+    //     const localHitPoint = worldHitPoint.clone().sub(pipeline.root.position);
+        
+    //     // Вычисляем параметр t (от 0 до 1) - где на сегменте произошел клик
+    //     const segVector = new THREE.Vector3().subVectors(endPoint, startPoint);
+    //     const hitVector = new THREE.Vector3().subVectors(localHitPoint, startPoint);
+        
+    //     // Проекция точки клика на вектор сегмента
+    //     const t = hitVector.dot(segVector) / segVector.lengthSq();
+        
+    //     // Ограничиваем t, чтобы не резать у самых краев (5% от начала и конца)
+    //     const clampedT = Math.max(0.05, Math.min(0.95, t));
+        
+    //     // Точка разреза в локальных координатах
+    //     const splitPoint = startPoint.clone().lerp(endPoint, clampedT);
+        
+    //     const diameter = segData.diameter;
+        
+    //     // Создаем ID для новых узлов
+    //     const newStartNodeId = segData.startNodeId; // Начало первого сегмента = начало исходного
+    //     const valveInNodeId = genNodeId();          // Вход в узел управления
+    //     const valveOutNodeId = genNodeId();         // Выход из узла управления
+    //     const newEndNodeId = segData.endNodeId;     // Конец второго сегмента = конец исходного
+        
+    //     // Создаем два новых сегмента
+    //     const newSeg1 = {
+    //         start: startPoint.clone(),
+    //         end: splitPoint.clone(),
+    //         diameter: diameter,
+    //         startNodeId: newStartNodeId,
+    //         endNodeId: valveInNodeId
+    //     };
+        
+    //     const newSeg2 = {
+    //         start: splitPoint.clone(),
+    //         end: endPoint.clone(),
+    //         diameter: diameter,
+    //         startNodeId: valveOutNodeId,
+    //         endNodeId: newEndNodeId
+    //     };
+        
+    //     // Заменяем исходный сегмент на два новых
+    //     const allSegs = [...pipeline.userData.segments];
+    //     allSegs.splice(segIndex, 1, newSeg1, newSeg2);
+        
+    //     // Пересоздаем визуальную модель трубопровода
+        
+    //     const segsForFactory = allSegs.map(s => ({
+    //         start: s.start ? s.start.clone() : new THREE.Vector3(s.startPos.x, s.startPos.y, s.startPos.z),
+    //         end: s.end ? s.end.clone() : new THREE.Vector3(s.endPos.x, s.endPos.y, s.endPos.z),
+    //         diameter: s.diameter,
+    //         startNodeId: s.startNodeId,
+    //         endNodeId: s.endNodeId
+    //     }));
+        
+    //     const newPipelineRoot = Factory.createPipeline(segsForFactory, pipelineId);
+        
+    //     if (newPipelineRoot) {
+    //         newPipelineRoot.position.copy(pipeline.root.position);
+    //         newPipelineRoot.rotation.copy(pipeline.root.rotation);
+    //         newPipelineRoot.userData.number = pipeline.userData.number;
+    //         newPipelineRoot.userData.isClosedLoop = pipeline.userData.isClosedLoop;
+    //         newPipelineRoot.userData.connectedTo = pipeline.userData.connectedTo;
+            
+    //         Engine.scene.remove(pipeline.root);
+    //         Engine.scene.add(newPipelineRoot);
+            
+    //         pipeline.root = newPipelineRoot;
+    //         pipeline.userData = {
+    //             ...newPipelineRoot.userData,
+    //             number: pipeline.userData.number,
+    //             isClosedLoop: pipeline.userData.isClosedLoop,
+    //             connectedTo: pipeline.userData.connectedTo
+    //         };
+    //     }
+        
+    //     // Создаем узел управления
+    //     STATE.objectCounter++;
+    //     STATE.valveCounter++;
+        
+    //     const valveLength = 1;
+    //     const valve = Factory.createControlValve(valveLength, diameter, STATE.objectCounter);
+        
+    //     // Позиционируем узел управления в точке разреза (в мировых координатах)
+    //     valve.position.copy(splitPoint.clone().add(pipeline.root.position));
+        
+    //     // Поворачиваем узел управления по направлению сегмента
+    //     const direction = segVector.clone().normalize();
+    //     const quaternion = new THREE.Quaternion().setFromUnitVectors(
+    //         new THREE.Vector3(1, 0, 0),
+    //         direction
+    //     );
+    //     valve.quaternion.copy(quaternion);
+        
+    //     valve.userData.number = STATE.valveCounter;
+        
+    //     Engine.scene.add(valve);
+    //     STATE.objects.push({
+    //         id: STATE.objectCounter,
+    //         type: 'control_valve',
+    //         root: valve,
+    //         userData: valve.userData
+    //     });
+        
+    //     STATE.insertValveMode = false;
+    //     document.getElementById('arm_valve')?.classList.remove('active');
+        
+    //     Tree.update();
+    //     Utils.showStatus(`✓ Участок разбит. Узел управления №${STATE.valveCounter} вставлен.`);
+    // }
 }

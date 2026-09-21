@@ -1,6 +1,6 @@
 // modules/network-graph.js
 class NetworkGraph {
-    static build() {
+    build() {
         const nodes = [];
         const edges = [];
         const nodeMap = {};

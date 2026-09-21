@@ -621,4 +621,8 @@ class ObjectEditor {
             Utils.showStatus('Объект удален');
         }
     }
+        // Метод-обёртка для совместимости с tree.js
+    startDuplicateMode(o) {
+        return this.startDuplicate(o);
+    }
 }
