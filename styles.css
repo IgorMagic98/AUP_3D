@@ -118,11 +118,14 @@
       pointer-events: none;
     }
 
+        /* === ИСПРАВЛЕННАЯ ПАНЕЛЬ ДЕРЕВА === */
     #treePanel {
       position: absolute;
       top: 150px;
       left: 0;
-      width: 300px;
+      width: 300px; /* Начальная ширина */
+      min-width: 250px; /* Минимальная ширина при сжатии */
+      max-width: 600px; /* Максимальная ширина при растягивании */
       bottom: 0;
       background: rgba(255, 255, 255, .98);
       z-index: 10;
@@ -141,6 +144,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0; /* Чтобы шапка не сжималась */
     }
 
     #treePanel .panel-header .count {
@@ -151,12 +155,67 @@
       font-size: 11px;
     }
 
+    /* Контейнер для списка (только прокрутка, без позиционирования) */
     #treeContainer {
       flex: 1;
       overflow-y: auto;
+      overflow-x: hidden;
       padding: 6px;
       font-size: 14px;
+      background: #f8f9fa;
     }
+
+    /* === РУЧКА ДЛЯ ИЗМЕНЕНИЯ РАЗМЕРА === */
+    #treeResizeHandle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 6px;
+      background: transparent;
+      cursor: col-resize;
+      z-index: 100;
+      transition: background 0.2s;
+    }
+
+    #treeResizeHandle:hover,
+    #treeResizeHandle.active {
+      background: #1976d2; /* Синяя полоска при наведении */
+    }
+
+    /* Индикатор (три точки) */
+    #treeResizeHandle::after {
+      content: '⋮';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #999;
+      font-size: 16px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    #treeResizeHandle:hover::after,
+    #treeResizeHandle.active::after {
+      opacity: 1;
+      color: white;
+    }
+
+    /* Блокировка выделения текста при перетаскивании */
+    body.resizing-tree {
+      cursor: col-resize !important;
+      user-select: none;
+    }
+
+    body.resizing-tree * {
+      pointer-events: none !important;
+    }
+
+    body.resizing-tree #treeResizeHandle {
+      pointer-events: auto !important;
+    }
+
 
     .tree-empty {
       padding: 20px;
@@ -1050,3 +1109,20 @@
       color: #666;
       font-size: 11px;
     }
+    
+    .tree-node-segment {
+        padding-left: 30px;
+        background: #f5f5f5;
+        margin: 2px 0;
+        border-left: 2px solid #1a80cc;
+    }
+
+    .tree-node-segment .tree-icon {
+        font-size: 12px;
+    }
+
+    .tree-node-segment .tree-label {
+        font-size: 13px;
+        color: #333;
+    }
+

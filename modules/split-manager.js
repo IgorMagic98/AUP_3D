@@ -493,6 +493,72 @@ class SplitManager {
         Utils.showStatus(`✓ Участок разбит. Узел управления №${STATE.valveCounter} вставлен.`);
     }
 
+
+
+    /**
+     * Редактировать параметры сегмента трубопровода
+     */
+    applySegmentEdit(pipelineId, segmentIndex, newLength, newDiameter) {
+        const pipeline = STATE.objects.find(o => o.id === pipelineId);
+        if (!pipeline || !pipeline.userData.segments[segmentIndex]) {
+            Utils.showStatus('Сегмент не найден');
+            return;
+        }
+        
+        const segData = pipeline.userData.segments[segmentIndex];
+        const startPoint = new THREE.Vector3(segData.startPos.x, segData.startPos.y, segData.startPos.z);
+        const endPoint = new THREE.Vector3(segData.endPos.x, segData.endPos.y, segData.endPos.z);
+        
+        // Направление сегмента
+        const direction = new THREE.Vector3().subVectors(endPoint, startPoint).normalize();
+        
+        // Новая конечная точка
+        const newEndPoint = startPoint.clone().add(direction.clone().multiplyScalar(newLength));
+        
+        // Обновляем данные сегмента
+        segData.length = newLength;
+        segData.diameter = newDiameter;
+        segData.endPos = { 
+            x: newEndPoint.x, 
+            y: newEndPoint.y, 
+            z: newEndPoint.z 
+        };
+        
+        // Пересоздаем трубопровод
+        const allSegs = [...pipeline.userData.segments];
+        const segsForFactory = allSegs.map(s => ({
+            start: new THREE.Vector3(s.startPos.x, s.startPos.y, s.startPos.z),
+            end: new THREE.Vector3(s.endPos.x, s.endPos.y, s.endPos.z),
+            diameter: s.diameter,
+            startNodeId: s.startNodeId,
+            endNodeId: s.endNodeId
+        }));
+        
+        const newPipelineRoot = Factory.createPipeline(segsForFactory, pipelineId);
+        
+        if (newPipelineRoot) {
+            newPipelineRoot.position.copy(pipeline.root.position);
+            newPipelineRoot.rotation.copy(pipeline.root.rotation);
+            newPipelineRoot.userData.number = pipeline.userData.number;
+            newPipelineRoot.userData.isClosedLoop = pipeline.userData.isClosedLoop;
+            newPipelineRoot.userData.connectedTo = pipeline.userData.connectedTo;
+            
+            Engine.scene.remove(pipeline.root);
+            Engine.scene.add(newPipelineRoot);
+            
+            pipeline.root = newPipelineRoot;
+            pipeline.userData = {
+                ...newPipelineRoot.userData,
+                number: pipeline.userData.number,
+                isClosedLoop: pipeline.userData.isClosedLoop,
+                connectedTo: pipeline.userData.connectedTo
+            };
+        }
+        
+        Tree.update();
+        Utils.showStatus(`✓ Участок #${segmentIndex + 1} обновлен: ${newLength.toFixed(2)}м, DN${newDiameter}`);
+    }
+
     // insertValveAt(segHit) {
     //     const seg = segHit.object;
     //     const pipelineId = seg.userData.pipelineId;
