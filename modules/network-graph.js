@@ -4,11 +4,12 @@ class NetworkGraph {
         const nodes = [];
         const edges = [];
         const nodeMap = {};
-        
+        // console.log('STATE.objects',STATE.objects)
         // Process pipelines
         STATE.objects.filter(o => o.type === 'pipeline').forEach(pipe => {
             const root = pipe.root;
             root.updateMatrixWorld(true);
+            // console.log('root (network-graph)', root)
             const segs = pipe.userData.segments || [];
             const np = pipe.userData.nodePositions || {};
             
@@ -16,9 +17,18 @@ class NetworkGraph {
                 [seg.startNodeId, seg.endNodeId].forEach(nid => {
                     if (!nodeMap[nid]) {
                         const lp = np[nid] || { x: 0, y: 0, z: 0 };
-                        const wp = new THREE.Vector3(lp.x, lp.y, lp.z).applyMatrix4(root.matrixWorld);
+                        let wp = new THREE.Vector3(lp.x, lp.y, lp.z).applyMatrix4(root.matrixWorld);
                         const isFirst = pipe.userData.segments[0].startNodeId === nid;
-                        
+
+                        const checkedNode = this.CheckNodes(nid, wp) //Проверка узла на координаты
+                        nid = checkedNode.id;
+                        wp = new THREE.Vector3(
+                            checkedNode.wp.x,
+                            checkedNode.wp.y,
+                            checkedNode.wp.z
+                        );
+                        console.log('АЙДИШНИК', nid)
+                        console.log('КООРДИНАТЫ', wp)
                         nodes.push({
                             id: nid,
                             type: isFirst ? 'source' : 'connectionPoint',
@@ -251,11 +261,15 @@ class NetworkGraph {
     }
 
     show() {
+        CheckNodesMap.clear();
         const g = this.build();
         this._currentGraph = g;
         
         document.getElementById('graphNodeCount').textContent = g.nodes.length;
         document.getElementById('graphEdgeCount').textContent = g.edges.length;
+
+        console.log("g.nodes.length", g.nodes.length);
+        console.log("g.edges.length", g.edges.length);
         
         if (!g.nodes.length) {
             document.getElementById('graphGroup').innerHTML = 
@@ -295,6 +309,41 @@ class NetworkGraph {
         this._graphApplyTransform();
         
         document.getElementById('networkGraphModal').classList.add('active');
+    }
+
+    CheckNodes(nid,wp) {
+        const x = wp.x;
+        const y = wp.y;
+        const z = wp.z;
+        const key = `x${x}y${y}z${z}`;
+
+        const finde_key = CheckNodesMap.get(key);
+
+        if (finde_key) {
+            return {
+                id: finde_key.id,
+                wp: finde_key.wp
+            };
+        };
+
+        const newNode = {
+            id: nid,
+            wp: {
+                x: x,
+                y: y,
+                z: z
+            }
+        };
+
+        CheckNodesMap.set(key, newNode);
+
+        return {
+            id: newNode.id,
+            wp: newNode.wp
+            // isNew: true
+        };
+
+
     }
 
     _layoutGraph(nodes, edges) {

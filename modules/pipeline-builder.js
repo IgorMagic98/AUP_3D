@@ -1,14 +1,45 @@
 // modules/pipeline-builder.js
 class PipelineBuilder {
+    
+
+    // document.getElementById('menuCreatePipelineTest');
+    startTest() {
+        seg_1_0.add(seg_2_0);
+        console.log ('seg_1_0' ,seg_1_0);
+
+    }
+
+
+
+
+    
+
+
+
+
+
+
     start() {
+
+
+
+
+
+
+
+
+
+
+
+
         if (STATE.pipeline.active) {
             this.cancel();
             return;
         }
 
         STATE.pipeline.active = true;
-        STATE.pipeline.segments = [];
-        STATE.pipeline.committedMeshes = [];
+        // STATE.pipeline.segments = [];
+        // STATE.pipeline.committedMeshes = [];
         STATE.pipeline.diameter = parseInt(document.getElementById('pbDiameter').value) || 25;
         STATE.pipeline.axis = 'y';
         STATE.pipeline.direction = '+';
@@ -32,9 +63,11 @@ class PipelineBuilder {
         b.style.left = Math.max(10, (innerWidth - 600) / 2) + 'px';
         b.style.top = Math.max(130, innerHeight - 350) + 'px';
 
-        Engine.controls.enabled = false;
+        // Engine.controls.enabled = false;
         this.updateSegmentsList();
         this.updatePreview();
+        console.log('STATE.pipeline.committedMeshes',STATE.pipeline.committedMeshes)
+        console.log('STATE.pipeline.segments',STATE.pipeline.segments)
     }
 
     cancel() {
@@ -54,7 +87,7 @@ class PipelineBuilder {
         Engine.controls.enabled = true;
     }
 
-    addSegment() {
+    addSegment(i) {
         const sx = parseFloat(document.getElementById('pbCX').value) || 0;
         const sy = parseFloat(document.getElementById('pbCY').value) || 0;
         const sz = parseFloat(document.getElementById('pbCZ').value) || 0;
@@ -86,9 +119,35 @@ class PipelineBuilder {
         const mesh = Factory.createOrientedCylinder(STATE.pipeline.currentPoint.clone(), ep.clone(), r, pm, `pb_c`);
         
         if (mesh) {
+
+            mesh.name = `segment_${i}_0`;
             mesh.userData = { type: 'committedPipeSegment' };
-            Engine.scene.add(mesh);
+
+            // 1. Ищем только сегменты труб в общем массиве
+            const pipeSegments = STATE.pipeline.committedMeshes.filter(m => m.userData.type === 'committedPipeSegment');
+
+            // 2. Проверяем, есть ли уже созданные трубы
+            if (pipeSegments.length > 0) {
+                // Забираем самый последний созданный меш трубы
+                const previousMesh = pipeSegments[pipeSegments.length - 1];
+                
+                // Добавляем новый меш прямо в наследники к предыдущему
+                previousMesh.add(mesh);
+            } 
+            else {
+                // Если это вообще первая труба, добавляем её на общую сцену
+                Engine.scene.add(mesh);
+            }
+
+            // Сохраняем меш в массив, чтобы следующая труба могла найти его как «предыдущий»
             STATE.pipeline.committedMeshes.push(mesh);
+
+            
+            
+            // mesh.name = `segment_${i}_0`;
+            // mesh.userData = { type: 'committedPipeSegment' };
+            // Engine.scene.add(mesh);
+            // STATE.pipeline.committedMeshes.push(mesh);
         }
 
         const cs = Math.max(0.15, r * 3);
@@ -98,15 +157,16 @@ class PipelineBuilder {
         );
         conn.position.copy(ep);
         conn.userData = { type: 'committedConnectionPoint' };
-        Engine.scene.add(conn);
+        // Engine.scene.add(conn);
         STATE.pipeline.committedMeshes.push(conn);
 
         STATE.pipeline.currentPoint.copy(ep);
         STATE.pipeline._currentNodeId = endNodeId;
         
-        this.updateCurrentPointUI();
-        this.updateSegmentsList();
-        this.updatePreview();
+        // this.updateCurrentPointUI();
+        // this.updateSegmentsList();
+        // this.updatePreview();
+        console.log('Полная структура сцены:', Engine.scene.toJSON().object);
     }
 
     finish() {

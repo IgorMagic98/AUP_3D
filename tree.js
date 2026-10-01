@@ -140,6 +140,8 @@ const Tree = {
       );
     }
 
+    console.log('Engine.scene',Engine.scene)
+
     const toggleIcon = hasSegments ? "▶" : "";
 
     r.innerHTML = `

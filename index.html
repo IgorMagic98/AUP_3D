@@ -46,6 +46,7 @@
           <div class="ribbon-btn-group">
             <button class="btn-ribbon" id="menuCreateRow">Создать...</button>
             <button class="btn-ribbon" id="menuDuplicateRow">Копировать...</button>
+            <button class="btn-ribbon" id="menuCreatePipelineTest">СоздатьТест</button>
           </div>
           <div class="ribbon-title">Рядок</div>
         </div>
@@ -56,6 +57,10 @@
             <button class="btn-ribbon" id="arm_check">Клапан обратный...</button>
             <button class="btn-ribbon" id="arm_filter">Фильтр...</button>
             <button class="btn-ribbon" id="arm_reg">Регулятор давления...</button>
+            <button class="btn-ribbon" id="group_mesh">Изменить группу</button>
+            <input type="number" id="Group_X" min="0" max="50" value="0">
+            <input type="number" id="Group_Y" min="0" max="50" value="0">
+            <input type="number" id="Group_Z" min="0" max="50" value="0">
           </div>
           <div class="ribbon-title">Трубопроводная арматура</div>
         </div>
@@ -64,6 +69,8 @@
             <button class="btn-ribbon" id="src_tank">Резервуар...</button>
             <button class="btn-ribbon" id="src_city">Параметры гор. водоснабж.</button>
             <button class="btn-ribbon" id="src_pump">Насос...</button>
+            <button class="btn-ribbon" id="deleted_test">Удалить меш</button>
+            <input type="number" id="TEST_id_child_deleted" min="1" max="50" value="1">
           </div>
           <div class="ribbon-title">Источники</div>
         </div>
@@ -71,6 +78,11 @@
           <div class="ribbon-btn-group">
             <button class="btn-ribbon" id="menuSceneSettings">Параметры сцены...</button>
             <button class="btn-ribbon" id="menuRunCalc">Запуск расчета...</button>
+            <button class="btn-ribbon" id="nodes_test">Добавить ветку</button>
+            <input type="number" id="TEST_X" min="0" max="50" value="0">
+            <input type="number" id="TEST_Y" min="0" max="50" value="0">
+            <input type="number" id="TEST_Z" min="0" max="50" value="0">
+            <!-- <button class="btn-ribbon" id="eges_test">Добавить участок</button> -->
           </div>
           <div class="ribbon-title">Расчет</div>
         </div>
@@ -78,6 +90,10 @@
           <div class="ribbon-btn-group">
             <button class="btn-ribbon" id="menuShowGraph">📊 Граф сети...</button>
             <button class="btn-ribbon" id="menuShowAutoConnections">⚡ Авто-связи...</button>
+            <button class="btn-ribbon" id="nodes_test_update">Обновить инфу</button>
+            <input type="number" id="TEST_id_child" min="1" max="50" value="5">
+            <input type="number" id="TEST_move" min="1" max="50" value="5">
+            <input type="number" id="TEST_rotated" min="1" max="50" value="5">
           </div>
           <div class="ribbon-title">Результаты</div>
         </div>

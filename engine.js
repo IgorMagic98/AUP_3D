@@ -9,6 +9,7 @@ const Engine = {
     renderer: null,
     controls: null,
     raycaster: null,
+    selectedObject: null,
     mouse: new THREE.Vector2(),
 
     init() {
@@ -49,7 +50,133 @@ const Engine = {
         this.scene.add(dl);
 
         addEventListener('resize', () => this.onResize());
+
+        this.renderer.domElement.addEventListener('pointerdown', (e) => this.onPointerDown(e));
+        this.renderer.domElement.addEventListener('pointermove', (e) => this.onPointerMove(e));
     },
+
+    // 2. ИСПРАВЛЕННЫЙ МЕТОД НАВЕДЕНИЯ МЫШИ
+    onPointerMove(event) {
+        this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+
+        // ТЕПЕРЬ ИСПОЛЬЗУЕМ ФИЛЬТР:
+        const validObject = this.checkValidIntersection(intersects);
+
+        if (validObject) {
+            this.renderer.domElement.style.cursor = 'pointer'; // Рука
+        } else {
+            this.renderer.domElement.style.cursor = 'default'; // Стрелка
+        }
+    },
+
+
+    
+
+     // 3. ИСПРАВЛЕННЫЙ МЕТОД КЛИКА МЫШИ
+    onPointerDown(event) {
+        this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+
+        // ТЕПЕРЬ ВЫДЕЛЯЕМ ЧЕРЕЗ ФИЛЬТР ГРУПП:
+        const hitTarget = this.checkValidIntersection(intersects);
+
+        if (hitTarget) {
+            // Сброс старого выделения (сработает для всей прошлой группы)
+            if (this.selectedObject && this.selectedObject !== hitTarget) {
+                this.deselectObject(this.selectedObject);
+            }
+
+            // Запоминаем и подсвечиваем НОВУЮ ГРУППУ целиком
+            this.selectedObject = hitTarget;
+            this.selectObject(hitTarget);
+
+        } else {
+            // Клик в пустоту — снимаем выделение
+            if (this.selectedObject) {
+                this.deselectObject(this.selectedObject);
+                this.selectedObject = null;
+            }
+        }
+    },
+
+    // Метод для выделения объекта (например, подсветим его красным)
+    selectObject(object) {
+        // Если это группа элементов
+        if (object.isGroup) {
+            object.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    // Сохраняем родной цвет каждого меша, если еще не сохранили
+                    if (!child.userData.originalColor) {
+                        child.userData.originalColor = child.material.color.getHex();
+                    }
+                    child.material.color.setHex(0xff0000); // Красим всю группу в красный
+                }
+            });
+        } 
+        // Если это одиночный меш (на случай, если кликнули не по трубе)
+        else if (object.isMesh && object.material) {
+            if (!object.userData.originalColor) {
+                object.userData.originalColor = object.material.color.getHex();
+            }
+            object.material.color.setHex(0xff0000);
+        }
+    },
+
+    // Метод для снятия выделения
+    deselectObject(object) {
+        if (object.isGroup) {
+            object.traverse((child) => {
+                if (child.isMesh && child.material && child.userData.originalColor !== undefined) {
+                    child.material.color.setHex(child.userData.originalColor); // Возвращаем исходный цвет
+                }
+            });
+        } else if (object.isMesh && object.material && object.userData.originalColor !== undefined) {
+            object.material.color.setHex(object.userData.originalColor);
+        }
+    },
+
+    // Вспомогательный метод для фильтрации объектов внутри Engine
+    checkValidIntersection(intersects) {
+        if (intersects.length === 0) return null;
+
+        for (let i = 0; i < intersects.length; i++) {
+            let hitObject = intersects[i].object;
+
+            // Игнорируем свет и вспомогательную сетку
+            if (hitObject.isGridHelper || hitObject.isLight) continue;
+
+            // Поднимаемся вверх по родителям в поисках группы с именем "group"
+            while (hitObject && !hitObject.isScene) {
+                if (hitObject.name === "group") {
+                    return hitObject; // Нашли! Возвращаем всю группу целиком
+                }
+                if (hitObject.parent && hitObject.parent.name === "group") {
+                    return hitObject.parent; // Тоже нашли (прямой родитель — группа)
+                }
+                hitObject = hitObject.parent; // Идем выше на один уровень
+            }
+
+            // Если объект не в группе, возвращаем сам меш
+            return intersects[i].object; 
+        }
+        return null;
+    },
+
+    // Метод адаптивности экрана
+    onResize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    },
+
+
 
     onResize() {
         const a = innerWidth / innerHeight;

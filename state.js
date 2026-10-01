@@ -42,6 +42,8 @@ const CONFIG = {
 };
 
 const STATE = {
+    lastPipelineRoot: null,
+    test_counter:1,
     objects: [],
     objectCounter: 0,
     pipelineCounter: 0,
@@ -85,7 +87,10 @@ const STATE = {
         minScale: .1, maxScale: 5, wheelStep: .1
     },
     project: { name: null, folderHandle: null, projectFolderHandle: null }
+
 };
+
+const CheckNodesMap = new Map();
 
 function genNodeId() {
     return 'N_' + String(++STATE.nodeCounter).padStart(4, '0');

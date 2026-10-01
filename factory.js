@@ -4,13 +4,91 @@
 // ============================================================
 
 const Factory = {
+  previousMesh: null,
+
+  group: Object.assign(new THREE.Group(), { name: "group" }),
+  
+
+  NodesstartTest(i, x, y, z){
+
+    
+    // nodes.name = `nodes_${i}`;
+    // nodes.position.set(x, y, z);
+    const mat = new THREE.MeshStandardMaterial({
+      color: CONFIG.COLORS.PIPE,
+      metalness: 0.2,
+      roughness: 0.8,
+    });
+    const mesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.25, 0.25, 5, CONFIG.QUALITY.PIPE_TESS),
+      mat,
+    );
+    mesh.name = `nodes_${i}`;
+
+    if (mesh.name=="nodes_2") {
+      mesh.position.set(x, y, z);
+      Engine.scene.add(mesh);
+    }
+    else {
+      mesh.position.set(x, y, z);
+      this.previousMesh.add(mesh);
+      // mesh.rotation.x = 90;
+    }   
+    this.previousMesh = mesh;
+
+    this.group.add(mesh);
+
+    Engine.scene.add(this.group);
+
+
+    console.log('i,x,y,z',i,x,y,z)
+    console.log('mesh', mesh)
+    console.log("чилдрен", Engine.scene.children);
+
+    console.log('group_test', this.group)
+    
+    // this.Group_mesh_test(mesh);
+
+
+  },
+
+
+  NodesstartTest_update(id,move,rotaited){
+    const id_11 = `nodes_${id}`;
+    const up_mesh = Engine.scene.getObjectByName(id_11);
+    up_mesh.position.x = move;
+    up_mesh.rotation.x = rotaited;
+    
+
+  },
+
+  NodesstartTest_deleted(id){
+    const id_11 = `nodes_${id}`;
+    const up_mesh = Engine.scene.getObjectByName(id_11);
+    up_mesh.parent.remove(up_mesh);
+    console.log("чилдрен", Engine.scene.children);
+  },
+
+  Group_mesh_test(x,y,z){
+    const up_mesh = Engine.scene.getObjectByName('group');
+    up_mesh.position.x = x;
+    up_mesh.position.y = y;
+    up_mesh.rotation.z = z;
+  },
+
+
+
+
+
+
   createOrientedCylinder(s, e, r, m, n) {
     const l = s.distanceTo(e);
     if (l < 0.001) return null;
     const mesh = new THREE.Mesh(
       new THREE.CylinderGeometry(r, r, l, CONFIG.QUALITY.PIPE_TESS),
       m,
-    );
+    );  
+
     mesh.name = n;
     mesh.position.copy(s).lerp(e, 0.5);
     const d = new THREE.Vector3().subVectors(e, s).normalize();
@@ -64,6 +142,7 @@ const Factory = {
     });
     return g;
   },
+  
 
   createPipeline(segments, id) {
     if (!segments || !segments.length) return null;
@@ -180,7 +259,8 @@ const Factory = {
     root.userData.totalLength = totalLen;
     return root;
   },
-
+      
+    
 
   // Ветка с оросителями
   createBranch(lengths, diameters, id) {

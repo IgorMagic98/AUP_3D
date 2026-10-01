@@ -43,6 +43,62 @@ class UIApp {
 
     document.getElementById("menuCreatePipeline").onclick = () =>
       this.pipeline.start();
+
+
+    document.getElementById("menuCreatePipelineTest").onclick = () =>
+      this.pipeline.startTest();
+
+    
+
+
+
+    
+
+    document.getElementById("nodes_test").onclick = () =>
+      {
+        let X = document.getElementById("TEST_X").value;
+        let Y = document.getElementById("TEST_Y").value;
+        let Z = document.getElementById("TEST_Z").value;
+        STATE.test_counter += 1;
+        Factory.NodesstartTest(STATE.test_counter, X, Y, Z)};
+
+    document.getElementById("nodes_test_update").onclick = () =>
+      {
+        let X = document.getElementById("TEST_id_child").value;
+        let Y = document.getElementById("TEST_move").value;
+        let Z = document.getElementById("TEST_rotated").value;
+        // STATE.test_counter += 1;
+        Factory.NodesstartTest_update(X, Y, Z)};   
+        
+    document.getElementById("deleted_test").onclick = () =>
+      {
+        let X = document.getElementById("TEST_id_child_deleted").value;
+        // let Y = document.getElementById("TEST_move").value;
+        // let Z = document.getElementById("TEST_rotated").value;
+        // STATE.test_counter += 1;
+        Factory.NodesstartTest_deleted(X)};   
+        
+    document.getElementById("group_mesh").onclick = () =>
+      {
+        let X = document.getElementById("Group_X").value;
+        let Y = document.getElementById("Group_Y").value;
+        let Z = document.getElementById("Group_Z").value;
+        // STATE.test_counter += 1;
+        Factory.Group_mesh_test(X,Y,Z)};   
+    // document.getElementById("eges_test").onclick = () =>
+    //   Factory.EgesstartTest();
+
+
+    // document.getElementById("nodes_test").onclick = () =>
+    //   Factory.commitPipeline();
+    // document
+    // .getElementById("nodes_test")
+    // .addEventListener("click", () => {
+    //     this.pipeline.commitPipeline();
+    // });
+
+
+
     document.getElementById("menuSplitSegment").onclick = () =>
       this.split.startSegmentMode();
     document.getElementById("menuSplitPipeline").onclick = () =>
@@ -240,7 +296,9 @@ class UIApp {
 
     document
       .getElementById("pbConfirm")
-      .addEventListener("click", () => this.pipeline.addSegment());
+      .addEventListener("click", () => {
+        STATE.test_counter += 1;
+        this.pipeline.addSegment(STATE.test_counter)});
     document
       .getElementById("pbFinish")
       .addEventListener("click", () => this.pipeline.finish());
