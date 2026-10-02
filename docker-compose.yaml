@@ -1,0 +1,40 @@
+volumes:
+  pg_data_production:
+  static:
+  media:
+
+services:
+  db:
+    image: postgres:13.10
+    env_file: .env
+    volumes:
+      - pg_data_production:/var/lib/postgresql/data
+  backend:
+    build: ./backend/
+    env_file: .env
+    volumes:
+      - static:/backend_static
+      - media:/app/media
+      - ./backend:/app
+    depends_on:
+      - db
+  aup_3d:
+    env_file: .env
+    build: ./aup3d/
+    # command: cp -r /app/build/. /frontend_static/
+    volumes:
+      - static:/app
+      - media:/media
+
+  gateway:
+    build: ./nginx/
+    env_file: .env
+    ports:
+      - 8000:80
+    volumes:
+      - static:/staticfiles
+      - media:/media
+      - ./aup3d:/staticfiles
+    depends_on:
+      - backend
+      - aup_3d
