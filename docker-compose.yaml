@@ -20,7 +20,7 @@ services:
       - db
   aup_3d:
     env_file: .env
-    build: ./AUP_3D/
+    build: ./aup3d/
     # command: cp -r /app/build/. /frontend_static/
     volumes:
       - static:/app
@@ -34,7 +34,7 @@ services:
     volumes:
       - static:/staticfiles
       - media:/media
-      - ./AUP_3D:/staticfiles
+      - ./aup3d:/staticfiles
     depends_on:
       - backend
       - aup_3d
