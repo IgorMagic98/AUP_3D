@@ -10,6 +10,11 @@ class UIApp {
     this.visuals = new VisualEffects();
     this.armature = new Armature(); 
     this.input = null;
+
+
+
+    // this.Pipeline = new Edge_new();
+
     
   }
 
@@ -31,6 +36,19 @@ class UIApp {
   }
 
   _bindRibbonButtons() {
+
+    // document.getElementById("menuCreatePipeline").onclick = () =>
+    //   this.pipeline.CreatePipeline();
+
+
+
+
+
+
+
+
+
+
     document.getElementById("menuNew").onclick = () => {
       document.getElementById("newProjectModal").classList.add("active");
       document.getElementById("projectNameInput").value = "";
@@ -41,8 +59,7 @@ class UIApp {
     document.getElementById("menuOpen").onclick = () => this.project.open();
     document.getElementById("menuSave").onclick = () => this.project.save();
 
-    document.getElementById("menuCreatePipeline").onclick = () =>
-      this.pipeline.start();
+    
     document.getElementById("menuSplitSegment").onclick = () =>
       this.split.startSegmentMode();
     document.getElementById("menuSplitPipeline").onclick = () =>
@@ -238,15 +255,15 @@ class UIApp {
       this.pipeline.updatePreview();
     });
 
-    document
-      .getElementById("pbConfirm")
-      .addEventListener("click", () => this.pipeline.addSegment());
-    document
-      .getElementById("pbFinish")
-      .addEventListener("click", () => this.pipeline.finish());
-    document
-      .getElementById("pbCancel")
-      .addEventListener("click", () => this.pipeline.cancel());
+    // document
+    //   .getElementById("pbConfirm")
+    //   .addEventListener("click", () => this.pipeline.addSegment());
+    // document
+    //   .getElementById("pbFinish")
+    //   .addEventListener("click", () => this.pipeline.finish());
+    // document
+    //   .getElementById("pbCancel")
+    //   .addEventListener("click", () => this.pipeline.cancel());
   }
 
   _bindModalButtons() {

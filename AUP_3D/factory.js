@@ -9,25 +9,48 @@ class Node_new extends THREE.Mesh
             super( geometry, material);
             this.type=type;
             this.name='Node_new';
+            STATE.Three_D_objects.push(this);
         }
 }
 
 class Edge_new extends THREE.Mesh
 {
     constructor( geometry, material, start_node, end_node) 
-        {
+      {
             super( geometry, material);
             this.start_node=start_node;
             this.end_node= end_node;
             this.name='Edge_new';
-            this.position.set(start_node.position.x,start_node.position.y, start_node.position.z);
-            this.point2 = new THREE.Vector3(end_node.position.x,end_node.position.y, end_node.position.z)
-            this.lookAt(this.point2);
-            console.log(this.position);
+
+
+            STATE.Three_D_objects.push(this);
+
+            // this.position.set(start_node.position.x,start_node.position.y, start_node.position.z);
+            // this.point2 = new THREE.Vector3(end_node.position.x,end_node.position.y, end_node.position.z)
+            // this.lookAt(this.point2);
+            // Line
+
+            // const path = new THREE.Line(start_node.position, end_node.position)
+
+
+
+            // console.log("Начальаня точка ребра",start_node.position);
+            // console.log("Конечная точка ребра",end_node.position);
             
-        }
+      }
+
+      // CreatePipeline () {
+      //   alert('dfdfdf');
+      //   // 1. Создаем общие геометрии и материалы
+        
+      // }
       
 }
+
+
+
+
+
 
 
 
@@ -93,7 +116,7 @@ const Factory = {
     return g;
   },
 
-  createPipeline(segments, id) {
+  createPipeline_old(segments, id) {
     if (!segments || !segments.length) return null;
     const root = new THREE.Group();
     root.name = `pipeline_${id}`;
@@ -666,7 +689,7 @@ const Factory = {
   createConnectionPipeline(sp, ep, dn, id) {
     const sn = genNodeId();
     const en = genNodeId();
-    return this.createPipeline(
+    return this.createPipeline_old(
       [
         {
           start: sp.clone(),

@@ -3,11 +3,11 @@
 // ВАЖНО: подключается ПОСЛЕ three.min.js (использует THREE.Vector3)
 // ============================================================
 
-const GEOMETRY_TOLERANCE = 0.005;
+// const GEOMETRY_TOLERANCE = 0.005;
 
-function isSamePoint(p1, p2, t) {
-    return p1.distanceToSquared(p2) <= (t || GEOMETRY_TOLERANCE) * (t || GEOMETRY_TOLERANCE);
-}
+// function isSamePoint(p1, p2, t) {
+//     return p1.distanceToSquared(p2) <= (t || GEOMETRY_TOLERANCE) * (t || GEOMETRY_TOLERANCE);
+// }
 
 const AXES_SETTINGS = {
     AUTO_SIZE: { ENABLED: false, RELATIVE_RATIO: .25, MIN_SIZE: .5, MAX_SIZE: 10 },
@@ -42,6 +42,15 @@ const CONFIG = {
 };
 
 const STATE = {
+
+
+    Three_D_objects: [],
+
+
+
+
+
+    
     objects: [],
     objectCounter: 0,
     pipelineCounter: 0,

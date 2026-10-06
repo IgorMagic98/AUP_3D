@@ -359,9 +359,35 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    
+
+
+
+/* окно для перемещения модальных окон */
+    /* #move_window {
+      display: none;        
+      position: absolute;   
+      top: calc(100vh - 250px); 
+      left: 50%;           
+      transform: translateX(-50%); 
+      z-index: 1000;
+      user-select: none;
+    } */
+
+
+
+
+
 
     #pipelineBuilder {
-      position: absolute;
+      /* background: #0f1379;
+      padding: 0;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+      color: #fff;
+      font-size: 13px;
+      min-width: 600px; */
+      position: fixed;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
@@ -376,9 +402,9 @@
       min-width: 600px;
     }
 
-    #pipelineBuilder.active {
+    /* #pipelineBuilder.active {
       display: block;
-    }
+    } */
 
     #pipelineBuilder .pipeline-header {
       background: rgba(0, 0, 0, .2);

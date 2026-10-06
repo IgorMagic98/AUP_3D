@@ -17,12 +17,12 @@ const World = {
             }
         });
 
-        STATE.meshes.ground = new THREE.Mesh(
-            new THREE.PlaneGeometry(w, d),
-            new THREE.MeshStandardMaterial({ color: CONFIG.COLORS.GROUND, side: THREE.DoubleSide })
-        );
-        STATE.meshes.ground.rotation.x = -Math.PI / 2;
-        Engine.scene.add(STATE.meshes.ground);
+        // STATE.meshes.ground = new THREE.Mesh(
+        //     new THREE.PlaneGeometry(w, d),
+        //     new THREE.MeshStandardMaterial({ color: CONFIG.COLORS.GROUND, side: THREE.DoubleSide })
+        // );
+        // STATE.meshes.ground.rotation.x = -Math.PI / 2;
+        // Engine.scene.add(STATE.meshes.ground);
 
         const mx = Math.max(w, d);
         STATE.meshes.grid = new THREE.GridHelper(mx, mx, CONFIG.COLORS.GRID, CONFIG.COLORS.GRID);
