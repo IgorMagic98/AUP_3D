@@ -27,13 +27,12 @@ class Node_new extends THREE.Mesh
           return [this.X_gl, this.Y_gl, this.Z_gl];
         }
         add_list(){
-          return [
-            this.uuid,   
-            this.type,   
-            this.X_gl,  
-            this.Y_gl,   
-            this.Z_gl
-          ];
+          return {"id": this.uuid,   
+            "type" : this.type,
+            "X_gl" : this.X_gl,   
+            "Y_gl" : this.Y_gl,
+            "Z_gl" : this.Z_gl
+          };
             
         }
       
@@ -55,14 +54,13 @@ class Edge_new extends THREE.Mesh
                         
       }
       add_list(){
-          return [
-            this.uuid,   
-            this.type,   
-            this.DN,  
-            this.Length,   
-            this.start_node.uuid,
-            this.end_node.uuid            
-          ];
+          return {"id": this.uuid,   
+            // "type" : this.type,   
+            "DN" : this.DN,  
+            "Length" : this.Length,   
+            "start_node" : this.start_node.uuid,
+            "end_node" : this.end_node.uuid
+          };
                         
           
       }
