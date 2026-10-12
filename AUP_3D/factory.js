@@ -55,7 +55,7 @@ class Edge_new extends THREE.Mesh
       }
       add_list(){
           return {"id": this.uuid,   
-            // "type" : this.type,   
+            "type" : this.type,   
             "DN" : this.DN,  
             "Length" : this.Length,   
             "start_node" : this.start_node.uuid,
