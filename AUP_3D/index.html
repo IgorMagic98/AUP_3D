@@ -652,6 +652,7 @@
   <script src="modules/input-handler.js"></script>
   <script src="modules/ui-app.js"></script>
   <script src="new.js"></script>
+  <script src="api_module.js"></script>
   <script>
 
   // import { User } from './modules/user.js'
@@ -674,6 +675,24 @@
     // alert(Engine.scene.getObjectByName('branch_1').position.x);
     // alert(Engine.scene.getObjectByName('branch_1').position.y);
     // alert(Engine.scene.getObjectByName('branch_1').position.z);
+  getTubeTypes()
+  .then(types => {
+    console.log('Тип трубы:', types[1].name);
+    // обновляешь DOM
+  })
+  .catch(err => {
+    console.error(err);
+  });
+
+  getTube(1)
+  .then(types => {
+    console.log('Тип трубы:', types[1].name);
+    // обновляешь DOM
+  })
+  .catch(err => {
+    console.error(err);
+  });
+
   let t =[];
   Engine.scene.traverse((child) => {
       // Проверяем, является ли это мешем (3D-моделью с геометрией)
