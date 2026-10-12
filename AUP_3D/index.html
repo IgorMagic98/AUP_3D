@@ -5,8 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Модуль построения конфигурации АУП в 3D</title>
+  <!-- Используем unpkg (более надежный) -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -25,10 +28,10 @@
         </div>
         <div class="ribbon-section">
           <div class="ribbon-btn-group">
-            <button class="btn-ribbon" id="menuCreatePipeline" style="color: #d32f2f;">Создать трубопровод</button>
-            <button class="btn-ribbon" id="menuSplitPipeline" style="color: #d32f2f;">Разбить трубопровод</button>
-            <button class="btn-ribbon" id="menuPipeline_Edit" style="color: #d32f2f;">Редактировать трубопровод</button>
-            <button class="btn-ribbon" id="Check_3D" style="color: #d32f2f;">ПроCHECKовочка</button>
+            <button class="btn-ribbon" id="menuCreatePipeline" style="color: #09bd36;">Создать трубопровод</button>
+            <button class="btn-ribbon" id="menuSplitPipeline" style="color: #09bd36;">Разбить трубопровод</button>
+            <button class="btn-ribbon" id="menuPipeline_Edit" style="color: #09bd36;">Редактировать трубопровод</button>
+            <button class="btn-ribbon" id="Check_3D" style="color: #09bd36;">ПроCHECKовочка</button>
             <button class="btn-ribbon" id="menuDuplicateObject">Копировать...</button>
             <div style="height:1px;background:rgba(255,255,255,0.3);margin:4px 0;width:100%;"></div>
             <button class="btn-ribbon" id="menuConnectPoints">Соединить узлы...</button>
@@ -38,8 +41,8 @@
         </div>
         <div class="ribbon-section">
           <div class="ribbon-btn-group">
-            <button class="btn-ribbon" id="menuCreateBranch" style="color: #d32f2f;">Создать ветку</button>
-            <button class="btn-ribbon" id="Add_list_object" style="color: #d32f2f;">Собрать массив данных</button>
+            <button class="btn-ribbon" id="menuCreateBranch" style="color: #09bd36;">Создать ветку</button>
+            <button class="btn-ribbon" id="Add_list_object" style="color: #09bd36;">▶ Расчет</button>
             <button class="btn-ribbon" id="menuDuplicateBranch">Копировать...</button>
             <button class="btn-ribbon" id="menuCreateRow_new_ob">Получить элементы</button>
           </div>
