@@ -451,7 +451,7 @@ function broken_pipe_tube() {
 
 
 async function sendJson(v) {
-        console.log("vvvvvvvvvvvvvvvvv",v)
+        // console.log("vvvvvvvvvvvvvvvvv",v)
         // const v = document.getElementById('graphJsonOutput').value;
     try {
             const response = await fetch('api/sole/', {
