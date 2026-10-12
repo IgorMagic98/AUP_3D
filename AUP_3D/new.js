@@ -8,6 +8,8 @@ document.getElementById("menuPipeline_Edit").onclick = () => check_pipe_tube_Edi
 document.getElementById("menuCreateBranch").onclick = () => Check_CreateBranch();
 // Запуск сбора инфы по объектам
 document.getElementById("Add_list_object").onclick = () => Add_data_base();
+
+
 // Временная проверка координат элементов
 document.getElementById("Check_3D").onclick = () => logPipelineTree();
 // Проверка существования начального узала
@@ -38,7 +40,8 @@ function Add_data_base () {
     // Data_base.push(Node);
     // Data_base.push(Edge);
     console.log("Data_base для отправки на бэкэнд", Data_base)
-    sendJson(Data_base);
+    // sendJson(Data_base);
+    sendJsonAndVisualize(Data_base);
 }
 
 function Pipe_Line_visible_block () {
@@ -450,26 +453,60 @@ function broken_pipe_tube() {
 
 
 
-async function sendJson(v) {
-        // console.log("vvvvvvvvvvvvvvvvv",v)
-        // const v = document.getElementById('graphJsonOutput').value;
+// async function sendJson(v) {
+//         console.log("vvvvvvvvvvvvvvvvv",v)
+//         // const v = document.getElementById('graphJsonOutput').value;
+//     try {
+//             const response = await fetch('api/sole/', {
+//             method: 'POST', // Метод запроса
+//             headers: {
+//                 'Content-Type': 'application/json;charset=utf-8' // Указываем тип данных
+//         },
+//         body: JSON.stringify(v)
+//         });
+//                 if (!response.ok) {
+//                 throw new Error(`Ошибка HTTP: ${response.status}`);
+//                 }
+//                 const result = await response.json(); // Читаем ответ сервера в формате JSON
+//                 console.log('Ответ от сервера:', result);
+//             } catch (error) {
+//                 console.error('Ошибка при отправке запроса:', error);
+//             }
+// };
+
+
+async function sendJsonAndVisualize(v) {
+    console.log("📤 Отправка данных на расчет...", v);
+    
     try {
-            const response = await fetch('api/sole/', {
-            method: 'POST', // Метод запроса
+        const response = await fetch('api/sole/', {
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/json;charset=utf-8' // Указываем тип данных
-        },
-        body: JSON.stringify(v)
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(v)
         });
-                if (!response.ok) {
-                throw new Error(`Ошибка HTTP: ${response.status}`);
-                }
-                const result = await response.json(); // Читаем ответ сервера в формате JSON
-                console.log('Ответ от сервера:', result);
-            } catch (error) {
-                console.error('Ошибка при отправке запроса:', error);
-            }
-};
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Ошибка HTTP: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ Ответ от сервера:', result);
+
+        if (result.status === "success") {
+            // Вызываем функцию отрисовки меток на сцене
+            visualizeResults(result);
+        } else {
+            alert("Ошибка расчета: " + result.message);
+        }
+
+    } catch (error) {
+        console.error('❌ Ошибка при отправке запроса:', error);
+        alert("Ошибка сети или сервера: " + error.message);
+    }
+}
 
 
 
@@ -531,3 +568,175 @@ function logPipelineTree() {
     }
     console.log("====================================");
 }
+
+
+
+
+
+
+
+
+
+// ============================================================================
+// 1. Вспомогательная функция для создания текстовых меток (Sprite)
+// ============================================================================
+function createTextLabel(text, color = '#ffffff', yOffset = 0.5) {
+    // Делаем канвас КВАДРАТНЫМ для правильных пропорций
+    const canvas = document.createElement('canvas');
+    const size = 512;
+    canvas.width = size;
+    canvas.height = size;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.font = 'Bold 48px Arial, sans-serif';
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const lines = text.split('\n');
+    const lineHeight = 60;
+    const startY = (size - (lines.length * lineHeight)) / 2 + lineHeight / 2;
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+
+    lines.forEach((line, i) => {
+        ctx.fillText(line, size / 2, startY + i * lineHeight);
+    });
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    
+    const material = new THREE.SpriteMaterial({ 
+        map: texture, 
+        depthTest: false,
+        transparent: true,
+        sizeAttenuation: true  // Важно: масштаб зависит от расстояния до камеры
+    });
+    
+    const sprite = new THREE.Sprite(material);
+    // КВАДРАТНЫЙ масштаб — текст не будет сплюснут
+    sprite.scale.set(2, 2, 1);
+    sprite.position.y = yOffset;
+    sprite.name = 'CalculationLabel';
+    
+    return sprite;
+}
+
+// ============================================================================
+// 2. Функция очистки старых меток (ВАЖНО для предотвращения утечек памяти!)
+// ============================================================================
+function clearCalculationLabels() {
+    Engine.scene.traverse((child) => {
+        if (child.name === 'CalculationLabel') {
+            if (child.parent) {
+                child.parent.remove(child);
+            }
+            // Очистка памяти WebGL
+            if (child.material && child.material.map) {
+                child.material.map.dispose();
+            }
+            if (child.material) {
+                child.material.dispose();
+            }
+        }
+    });
+}
+
+// ============================================================================
+// 3. Главная функция визуализации результатов
+// ============================================================================
+function visualizeResults(result) {
+    console.log('🚀 Начинаем визуализацию...');
+    
+    // 1. Очищаем старые метки
+    clearCalculationLabels();
+
+    let nodesCount = 0;
+    let edgesCount = 0;
+
+    // 2. Добавляем метки к УЗЛАМ (Node / Source / Sprinkler)
+    for (const [uuid, data] of Object.entries(result.nodes)) {
+        // Ищем объект в сцене по UUID (приводим оба к нижнему регистру!)
+        const nodeObj = STATE.Three_D_objects.find(
+            obj => obj.uuid.toLowerCase() === uuid.toLowerCase() && 
+                   (obj.type === 'Node' || obj.type === 'Source' || obj.type === 'Sprinkler')
+        );
+
+        if (nodeObj) {
+            let labelText = `P: ${data.pressure_m.toFixed(3)} м`;
+            let labelColor = '#00ff00'; // Зеленый по умолчанию
+
+            if (data.type === 'sprinkler') {
+                labelText += `\nQ= ${data.sprinkler_flow_l_s.toFixed(3)} л/с`;
+                // Подсветка красным, если давление ниже требуемого (19.17 м)
+                if (data.pressure_m < 19.17) {
+                    labelColor = '#ff3333'; 
+                }
+            } else if (data.type === 'source') {
+                labelText += `\nQ= ${result.summary.total_flow_l_s.toFixed(3)} л/с`;
+                labelColor = '#ffff00'; // Желтый для источника
+            }
+
+            const label = createTextLabel(labelText, labelColor, 0.5);
+            nodeObj.add(label); // Добавляем как дочерний элемент узла
+            nodesCount++;
+        }
+    }
+
+    // 3. Добавляем метки к ТРУБАМ (Edge)
+    for (const [uuid, data] of Object.entries(result.edges)) {
+        const edgeObj = STATE.Three_D_objects.find(
+            obj => obj.uuid.toLowerCase() === uuid.toLowerCase() && obj.type === 'Edge'
+        );
+
+        if (edgeObj && edgeObj.start_node && edgeObj.end_node) {
+            // Вычисляем мировые координаты начала и конца трубы
+            const startWorld = new THREE.Vector3();
+            const endWorld = new THREE.Vector3();
+            edgeObj.start_node.getWorldPosition(startWorld);
+            edgeObj.end_node.getWorldPosition(endWorld);
+
+            // Находим середину трубы
+            const midWorld = new THREE.Vector3().lerpVectors(startWorld, endWorld, 0.5);
+
+            const labelText = `Q= ${data.flow_l_s.toFixed(3)} л/с`;
+            const label = createTextLabel(labelText, '#00ffff', 0); // Голубой цвет
+            
+            // Позиционируем метку в середине трубы и чуть выше
+            label.position.copy(midWorld);
+            label.position.y += 0.2; 
+            
+            Engine.scene.add(label);
+            edgesCount++;
+        }
+    }
+
+    console.log(`✅ ВИЗУАЛИЗАЦИЯ ЗАВЕРШЕНА! Добавлено меток: узлов=${nodesCount}, труб=${edgesCount}`);
+    alert(`✅ Расчет успешно завершен!\nДавление насоса: ${result.summary.source_pressure_m.toFixed(2)} м\nДобавлено меток: ${nodesCount + edgesCount}`);
+}
+
+// Функция для проверки структуры STATE.Three_D_objects
+function checkSceneStructure() {
+    console.log('=== ПРОВЕРКА СЦЕНЫ ===');
+    console.log('Всего объектов в STATE.Three_D_objects:', STATE.Three_D_objects.length);
+    
+    const nodes = STATE.Three_D_objects.filter(obj => 
+        obj.type === 'Node' || obj.type === 'Source' || obj.type === 'Sprinkler'
+    );
+    const edges = STATE.Three_D_objects.filter(obj => obj.type === 'Edge');
+    
+    console.log('Узлов:', nodes.length);
+    console.log('Труб:', edges.length);
+    
+    if (nodes.length > 0) {
+        console.log('Пример UUID первого узла:', nodes[0].uuid);
+        console.log('Тип первого узла:', nodes[0].type);
+    }
+    if (edges.length > 0) {
+        console.log('Пример UUID первой трубы:', edges[0].uuid);
+    }
+}
+
