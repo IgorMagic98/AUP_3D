@@ -475,8 +475,44 @@ function broken_pipe_tube() {
 // };
 
 
+// async function sendJsonAndVisualize(v) {
+//     console.log("📤 Отправка данных на расчет...", v);
+    
+//     try {
+//         const response = await fetch('api/sole/', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json;charset=utf-8'
+//             },
+//             body: JSON.stringify(v)
+//         });
+
+//         if (!response.ok) {
+//             const errorData = await response.json().catch(() => ({}));
+//             throw new Error(errorData.message || `Ошибка HTTP: ${response.status}`);
+//         }
+
+//         const result = await response.json();
+//         console.log('✅ Ответ от сервера:', result);
+
+//         if (result.status === "success") {
+//             // Вызываем функцию отрисовки меток на сцене
+//             visualizeResults(result);
+//         } else {
+//             alert("Ошибка расчета: " + result.message);
+//         }
+
+//     } catch (error) {
+//         console.error('❌ Ошибка при отправке запроса:', error);
+//         alert("Ошибка сети или сервера: " + error.message);
+//     }
+// }
+
+
+
+
 async function sendJsonAndVisualize(v) {
-    console.log("📤 Отправка данных на расчет...", v);
+    console.log(" Отправка данных на расчет...", v);
     
     try {
         const response = await fetch('api/sole/', {
@@ -496,6 +532,16 @@ async function sendJsonAndVisualize(v) {
         console.log('✅ Ответ от сервера:', result);
 
         if (result.status === "success") {
+            // ✅ ДОБАВИТЬ ЭТО: сохраняем данные для графика
+            window.lastCalculationResult = {
+                K_system: result.summary.K_system || 0.025,
+                Z_max: result.summary.Z_max || 0.0,
+                Q_total: result.summary.source_flow_l_s || 0.0,
+                H_source: result.summary.source_pressure_m || 0.0
+            };
+            
+            console.log("💾 Данные для графика сохранены:", window.lastCalculationResult);
+
             // Вызываем функцию отрисовки меток на сцене
             visualizeResults(result);
         } else {
@@ -507,7 +553,6 @@ async function sendJsonAndVisualize(v) {
         alert("Ошибка сети или сервера: " + error.message);
     }
 }
-
 
 
 
@@ -629,21 +674,57 @@ function createTextLabel(text, color = '#ffffff', yOffset = 0.5) {
 // 2. Функция очистки старых меток (ВАЖНО для предотвращения утечек памяти!)
 // ============================================================================
 function clearCalculationLabels() {
+    // Безопасный способ: собираем все метки в массив, потом удаляем
+    const labelsToRemove = [];
+    
     Engine.scene.traverse((child) => {
-        if (child.name === 'CalculationLabel') {
-            if (child.parent) {
-                child.parent.remove(child);
-            }
-            // Очистка памяти WebGL
-            if (child.material && child.material.map) {
-                child.material.map.dispose();
-            }
-            if (child.material) {
-                child.material.dispose();
-            }
+        if (child && child.name === 'CalculationLabel') {
+            labelsToRemove.push(child);
         }
     });
+    
+    // Удаляем метки отдельно, чтобы не ломать traverse()
+    labelsToRemove.forEach(label => {
+        try {
+            if (label.parent) {
+                label.parent.remove(label);
+            }
+            if (label.material && label.material.map) {
+                label.material.map.dispose();
+            }
+            if (label.material) {
+                label.material.dispose();
+            }
+        } catch (e) {
+            console.warn('Ошибка при удалении метки:', e);
+        }
+    });
+    
+    console.log(`🗑️ Удалено меток: ${labelsToRemove.length}`);
 }
+
+function cleanSceneOrphans() {
+    // Удаляем undefined детей из всех объектов сцены
+    Engine.scene.traverse((parent) => {
+        if (parent.children) {
+            parent.children = parent.children.filter(child => child !== undefined && child !== null);
+        }
+    });
+    
+    // Очищаем STATE.Three_D_objects от битых ссылок
+    STATE.Three_D_objects = STATE.Three_D_objects.filter(obj => {
+        if (!obj || !obj.uuid) return false;
+        // Проверяем, что объект всё ещё в сцене
+        let found = false;
+        Engine.scene.traverse((child) => {
+            if (child.uuid === obj.uuid) found = true;
+        });
+        return found;
+    });
+    
+    console.log(`🧹 Очистка сцены: ${STATE.Three_D_objects.length} объектов осталось`);
+}
+
 
 // ============================================================================
 // 3. Главная функция визуализации результатов
@@ -651,7 +732,10 @@ function clearCalculationLabels() {
 function visualizeResults(result) {
     console.log('🚀 Начинаем визуализацию...');
     
-    // 1. Очищаем старые метки
+    // Очищаем битые ссылки перед работой
+    cleanSceneOrphans();
+    
+    // Очищаем старые метки
     clearCalculationLabels();
 
     let nodesCount = 0;
