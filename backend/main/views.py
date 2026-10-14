@@ -32,7 +32,8 @@ if SOLVER_DIR not in sys.path:
     sys.path.insert(0, SOLVER_DIR)
 
 # Теперь импорт сработает!
-from flow_distribution.main import run_from_dict
+from solver.flow_distribution.main import run_from_dict
+# from flow_distribution.main import run_from_dict
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response

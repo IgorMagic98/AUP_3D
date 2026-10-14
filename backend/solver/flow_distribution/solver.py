@@ -122,7 +122,7 @@ from scipy.optimize import brentq
 
 jax.config.update("jax_enable_x64", True)
 
-PRESSURE_TARGET = 19.17
+PRESSURE_TARGET = 18.15
 
 
 class MonolithCore:
