@@ -1,14 +1,13 @@
 // Блок для отображения создания трубопровода.////////////////////////////////////////////////////////////////////////////////////////
 document.getElementById("menuCreatePipeline").onclick = () => Pipe_Line_visible_block();
-// Слушатель для разбиения трубопровода
-document.getElementById("menuSplitPipeline").onclick = () => check_pipe_tube();
+// Слушатель для удаления трубопровода
+document.getElementById("delete_SplitPipeline").onclick = () => delete_pipe_tube();
 // Слушатель для редактирвоания трубопровода
 document.getElementById("menuPipeline_Edit").onclick = () => check_pipe_tube_Edit();
 // Слушатель для созданяи ветки
 document.getElementById("menuCreateBranch").onclick = () => Check_CreateBranch();
 // Запуск сбора инфы по объектам
 document.getElementById("Add_list_object").onclick = () => Add_data_base();
-
 
 // Временная проверка координат элементов
 document.getElementById("Check_3D").onclick = () => logPipelineTree();
@@ -44,6 +43,7 @@ function Add_data_base () {
     sendJsonAndVisualize(Data_base);
 }
 
+// функция для вклчюения отображения блока созданяи ветки
 function Pipe_Line_visible_block () {
     // проверка существования узла
     let Check_Nodes = false;
@@ -53,13 +53,13 @@ function Pipe_Line_visible_block () {
         }
     });    
     if (Check_Nodes) {    
-        if (!Engine.selectedObject || Engine.selectedObject.type !== 'Node') {
+        if (!Engine.selectedObject || (Engine.selectedObject.type !== 'Node' && Engine.selectedObject.type !== 'Sprinkler')) {
             alert("Перед созданием трубопровода - выберите существующий узел!");
             return; 
         }
     }
     document.getElementById("pipelineBuilder").style.display = 'block';
-    if (Engine.selectedObject && Engine.selectedObject.type === 'Node') { 
+    if (Engine.selectedObject && Engine.selectedObject.type === 'Node'||Engine.selectedObject && Engine.selectedObject.type === 'Sprinkler') { 
         // создаем вектор для записи мировых координат выделенного объекта
         const selected_World_Pos = new THREE.Vector3();
         // Получаем мировые координаты выделенного объекта
@@ -193,17 +193,9 @@ function check_End_Node(pbCX_end, pbCY_end, pbCZ_end){
     Engine.scene.traverse((child) => {
         if (child.type === 'Node') { 
             const child_World_Pos = new THREE.Vector3();
-            child.getWorldPosition(child_World_Pos);
-            // console.log("child.position.x111",child.position.x)
-            // console.log("child.position.y111",child.position.y) 
-            // console.log("child.position.z111",child.position.z)
-            // console.log("pbCX_end1111",pbCX_end)
-            // console.log("pbCY_end1111",pbCY_end) 
-            // console.log("pbCZ_end1111",pbCZ_end)              
+            child.getWorldPosition(child_World_Pos);                         
             if (child_World_Pos.x === pbCX_end && child_World_Pos.y === pbCY_end && child_World_Pos.z === pbCZ_end) {
-                // console.log("child.position.x",child.position.x)
-                // console.log("child.position.y",child.position.y) 
-                // console.log("child.position.z",child.position.z)                  
+                            
                 foundNode = child; 
             }
         }
@@ -231,7 +223,6 @@ function check_pipe_tube_Edit(){
         alert("Создайте и выберите трубопровод!")
         return;
     }
-
     document.getElementById("PipelineModal_Edit").style.display = 'block';
     document.getElementById("number_pipe_edit").innerText = `${ Engine.selectedObject.name} id: ${Engine.selectedObject.id}`;
     document.getElementById("Length_pipe_edit").innerText = Engine.selectedObject.Length;
@@ -244,7 +235,7 @@ function check_pipe_tube_Edit(){
     document.getElementById("splitApplyBtn_Edit").onclick = () => edit_pipe_tube(Engine.selectedObject);
     
 }
-
+// функция дял изменения геометрии трубы
 function edit_pipe_tube(Edge) {
     let start_node = Edge.start_node;
     let end_node = Edge.end_node;
@@ -302,10 +293,12 @@ function edit_pipe_tube(Edge) {
 
     console.log("Engine.scene.children_EDIT",Engine.scene.children);
 
-
+    // check_position_node_for_edge(Edge.end_node);
+    check_position_node_for_edge();
 
 }
 
+// функция для обновления глобал координат (функция внутри класса Node)
 function update_Node_XYZ(){
     Engine.scene.traverse((child) => {    
         if (child.name === 'Node_new') {
@@ -317,6 +310,7 @@ function update_Node_XYZ(){
     console.log("Engine.scene.children_update_Node_XYZ",Engine.scene.children);
 }
 
+// функция првоерки и созданяи новой ветки 
 function Check_CreateBranch(){
     // проверка существования узла
     // alert("внутри функции разбиения")
@@ -327,7 +321,7 @@ function Check_CreateBranch(){
         }        
     });    
     if (Check_node) {    
-        if (!Engine.selectedObject || Engine.selectedObject.type !== 'Node') {
+        if (!Engine.selectedObject || (Engine.selectedObject.type !== 'Node' && Engine.selectedObject.type !== 'Sprinkler')) {
             alert("Выберите узел привязки!");
             return; 
         }
@@ -347,7 +341,7 @@ function Check_CreateBranch(){
 }
 
 
-
+// функция создания новой ветки
 function create_branch(Node) {
     const Count = parseFloat(document.getElementById("createBranchSprCount").value);
     const activeAxis = document.querySelector('#createBranchModal .axis-btn.active').dataset.axis;
@@ -409,16 +403,35 @@ function create_branch(Node) {
     
     console.log("Engine.scene.children", Engine.scene.children);
     cancel("createBranchModal");
-    update_Node_XYZ()
-
+    update_Node_XYZ();
 
 }
 
+function check_position_node_for_edge() {
+    Engine.scene.traverse((child) => {
+        if ( child.type === 'Edge') {
+            const start_check = new THREE.Vector3();
+            const end_check = new THREE.Vector3();
+            child.start_node.getWorldPosition(start_check);
+            child.end_node.getWorldPosition(end_check);
+            const new_long = start_check.distanceTo(end_check); // пересчитанная длина ребра междлу точками
+            child.Length = new_long;
+            const Local_position_start = start_check.clone();
+            const Local_position_end = end_check.clone();
+            child.worldToLocal(Local_position_start); //переходим в координаты родителя
+            child.worldToLocal(Local_position_end); //переходим в координаты родителя
+            const path = new THREE.LineCurve3(Local_position_start, Local_position_end); // строим путь от родителя
+            child.geometry.dispose(); // удаялем старую геомтерию
+            child.geometry = new THREE.TubeGeometry(path, 64, child.DN / 2 / 1000, 12, false);
+            child.updateMatrixWorld(true);
+        }
+    });    
 
-// Првоерка выбранной трубы
-function check_pipe_tube(){
-    // проверка существования трубопровода
-    // alert("внутри функции разбиения")
+}
+
+// Удаление выбранной трубы и связанный с ней дочерних элементов и есть дочерний узел является концом другого трубопровода,тот тоже удаляется
+function delete_pipe_tube() {
+    // проверка существования трубопровода        
     let Check_tube = false;
     Engine.scene.traverse((child) => {       
         if (child.type === 'Edge') {
@@ -427,29 +440,64 @@ function check_pipe_tube(){
     });    
     if (Check_tube) {    
         if (!Engine.selectedObject || Engine.selectedObject.type !== 'Edge') {
-            alert("Перед разбиением выберите турбопровод!");
+            alert("Перед удалением выберите турбопровод!");
             return; 
         }
     }
     else{
-        alert("Создайте и выберите трубопровод!")
+        alert("Трубопроводов нет!")
         return;
     }
-
-    document.getElementById("splitPipelineModal").style.display = 'block';
-    document.getElementById("number_pipe_break").innerText = `${ Engine.selectedObject.name} id: ${Engine.selectedObject.id}`;
-    document.getElementById("Length_pipe_break").innerText = Engine.selectedObject.Length;
     
-    console.log("Engine.selectedObject",Engine.selectedObject);
+    if (Engine.selectedObject.parent) {
+        Engine.selectedObject.parent.remove(Engine.selectedObject);
+    } else {
+        Engine.scene.remove(Engine.selectedObject);
+    }
+// у данного метода возможен скрытый баг, при обходе всех объектов на сцене и динамичном их удалении , возможно переназначение
+// внутреннего id объектов и слцучайных пропуск элемента , идущег осразу за удаленным!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// 2 цикла в каждом удалении обусловлены логикой работы js, он переназанчает id объектов динамичнро
+    Engine.selectedObject.traverse((child_node) => {
+        if (child_node.name === 'Node_new') {
+            const child_tube = [];
+            Engine.scene.traverse((scene_Child) => {
+                // Ищем трубы, которые НЕ принадлежат удаляемому объекту
+                if (scene_Child.type ==='Edge' && scene_Child.parent.uuid !== Engine.selectedObject.uuid) {
+                    child_tube.push(scene_Child);
+                }
+            });
+            child_tube.forEach((child) => {                
+                if (child.start_node.uuid === child_node.uuid || child.end_node.uuid === child_node.uuid) {
+                    child.parent.remove(child);
+                }                
+            });            
+        }        
+    });
 
-    // document.getElementById("splitCancelBtn").addEventListener("click", () => cancel("splitPipelineModal"));
-    // document.getElementById("splitApplyBtn").addEventListener("click", () => broken_pipe_tube());
+    Engine.scene.updateMatrixWorld(true);
+    // массив и логика проверки источника (source) если он являестя родителем и не имеет больше дочерних
+    // элементов то тоже удаляется со сцены
+    const source_node = [];
+    Engine.scene.traverse((child_node)=>{        
+        if (child_node.type === "Source" && child_node.children.length === 0) {
+            source_node.push(child_node);            
+        }        
+    });
+    source_node.forEach((child) => {                
+            if (child.parent) {
+                child.parent.remove(child);
+            } else {
+                Engine.scene.remove(child);
+            }              
+        });
+    Engine.scene.updateMatrixWorld(true);
+    console.log("Engine.scene.children проверка после удаления",Engine.scene.children);
     
 }
 
-function broken_pipe_tube() {
 
-};
+
+
 
 
 
