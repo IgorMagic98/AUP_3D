@@ -8,18 +8,31 @@ def run_from_dict(json_data):
     builder.build_graph()
     builder.build_matrices(K_sprinkler=0.47)
 
-    Q_final, P_final, P_optimal, dictating_idx = run_calculation(builder)
+    Q_final, P_final, P_optimal, dictating_idx, K_system, Z_max = run_calculation(builder)
 
+    total_flow_l_s = 0.0
+    if builder.source_idx is not None:
+        # Ищем ребро, где start_node или end_node = source_idx
+        for j in range(builder.M):
+            # Проверяем матрицу инцидентности R
+            # R[source_idx, j] != 0 означает, что ребро j подключено к источнику
+            if abs(builder.R[builder.source_idx, j]) > 0.5:
+                total_flow_l_s = abs(float(Q_final[j]))
+                break
+        
     result = {
         "status": "success",
         "summary": {
             "source_pressure_m": round(float(P_optimal), 4),
-            "total_flow_l_s": round(float(np.sum(Q_final)), 4),
+            "total_flow_l_s": round(total_flow_l_s, 4),
             "dictating_node_uuid": str(builder.idx_to_node_uuid[dictating_idx]),
+            "K_system": round(K_system, 6),
+            "Z_max": round(Z_max, 2)
         },
         "nodes": {},
         "edges": {},
-    }
+    }    
+   
 
     for i in range(builder.N):
         node_uuid = str(builder.idx_to_node_uuid[i])
