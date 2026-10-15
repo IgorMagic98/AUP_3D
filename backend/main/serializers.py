@@ -7,6 +7,7 @@ class NodeSerializer(serializers.Serializer):
     X_gl = serializers.FloatField()
     Y_gl = serializers.FloatField()
     Z_gl = serializers.FloatField()
+    K = serializers.FloatField()
 
 
 class EdgeSerializer(serializers.Serializer):
@@ -16,6 +17,9 @@ class EdgeSerializer(serializers.Serializer):
     end_node = serializers.UUIDField()
     Length = serializers.FloatField()
     DN = serializers.FloatField()
+    ghost = serializers.CharField(max_length=1000)
+    k_t = serializers.FloatField()
+    kvelocity = serializers.FloatField()    
     # type = serializers.CharField(max_length=50, required=False)  # Раскомментируйте, если поле type есть в Edge
 
 

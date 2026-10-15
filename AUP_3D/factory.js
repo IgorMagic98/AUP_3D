@@ -12,6 +12,7 @@ class Node_new extends THREE.Mesh
           this.X_gl=0;
           this.Y_gl=0;
           this.Z_gl=0;
+          this.K =0.47;
           STATE.Three_D_objects.push(this);
         }
           update_Global() {
@@ -31,7 +32,8 @@ class Node_new extends THREE.Mesh
             "type" : this.type,
             "X_gl" : this.X_gl,   
             "Y_gl" : this.Y_gl,
-            "Z_gl" : this.Z_gl
+            "Z_gl" : this.Z_gl,
+            "K" : this.K
           };
             
         }
@@ -40,7 +42,7 @@ class Node_new extends THREE.Mesh
 
 class Edge_new extends THREE.Mesh
 {
-    constructor( geometry, material, start_node, end_node, type, Length, DN) 
+    constructor( geometry, material, start_node, end_node, type, Length, DN, ghost, k_t, kvelocity) 
       {
             super( geometry, material);
             this.start_node=start_node;
@@ -49,6 +51,9 @@ class Edge_new extends THREE.Mesh
             this.type=type;
             this.Length=Length;
             this.DN = DN;
+            this.ghost = ghost;
+            this.k_t = k_t;
+            this.kvelocity = kvelocity;
 
             STATE.Three_D_objects.push(this);
                         
@@ -59,7 +64,10 @@ class Edge_new extends THREE.Mesh
             "DN" : this.DN,  
             "Length" : this.Length,   
             "start_node" : this.start_node.uuid,
-            "end_node" : this.end_node.uuid
+            "end_node" : this.end_node.uuid,
+            "ghost": this.ghost,
+            "k_t": this.k_t,
+            "kvelocity": this.kvelocity
           };
                         
           
