@@ -1,22 +1,3 @@
-# from rest_framework.decorators import api_view
-# from rest_framework.response import Response 
-# from .serializers import ALlSerializer
-
-# from rest_framework import status
-# @api_view(['POST'])
-# def new(request):
-#     body = request.data
-#     print(body)
-#     serializer = ALlSerializer(data=request.data)
-#     if serializer.is_valid():
-#         return Response({
-#             'serializer.data': serializer.data
-#         })
-#     print(serializer.is_valid())
-    
-    
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 import sys
 import os
 
@@ -57,6 +38,7 @@ def new(request):
     print("✅ Валидация прошла успешно")
     
     try:
+        print(serializer.validated_data)
         result = run_from_dict(serializer.validated_data)
         print(f"✅ Расчет завершен. P_source = {result['summary']['source_pressure_m']} м")
         return Response(result, status=status.HTTP_200_OK)
