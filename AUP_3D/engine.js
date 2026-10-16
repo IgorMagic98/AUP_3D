@@ -132,7 +132,7 @@ const Engine = {
             mesh.userData.originalColor = mesh.material.color.getHex();
         }
 
-        mesh.material.color.setHex(0xff0000); // Красим строго этот меш в красный
+        mesh.material.color.setStyle('#FFFF00'); // Красим строго этот меш в красный
     },
 
     // 5. СНЯТИЕ ВЫДЕЛЕНИЯ С ОДНОГО МЕША

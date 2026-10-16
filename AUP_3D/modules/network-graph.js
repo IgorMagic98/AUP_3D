@@ -528,13 +528,14 @@ class NetworkGraph {
     async sendJson() {
         console.log('z nen')
             const v = document.getElementById('graphJsonOutput').value;
+            const sceneData = Engine.scene.toJSON();
             try {
                 const response = await fetch('api/sole/', {
                 method: 'POST', // Метод запроса
                 headers: {
-                    'Content-Type': 'application/json;charset=utf-8' // Указываем тип данных
+                    'Content-Type': 'application/json;charset=utf-8',
                 },
-                body: v
+                body: JSON.stringify(sceneData)
                 });
 
                 if (!response.ok) {

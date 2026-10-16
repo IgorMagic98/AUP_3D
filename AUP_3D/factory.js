@@ -6,39 +6,72 @@ class Node_new extends THREE.Mesh
 {
     constructor( geometry, material, type) 
         {
-            super( geometry, material);
-            this.type=type;
-            this.name='Node_new';
-            STATE.Three_D_objects.push(this);
+          super( geometry, material);
+          this.type=type;
+          this.name='Node_new';
+          this.X_gl=0;
+          this.Y_gl=0;
+          this.Z_gl=0;
+          this.K =0.56;
+          STATE.Three_D_objects.push(this);
         }
+          update_Global() {
+          const World_Vector = new THREE.Vector3();        
+          // запрос позиции объекта
+          this.getWorldPosition(World_Vector);
+          
+          // обновляем свойства объекта
+          this.X_gl = World_Vector.x;
+          this.Y_gl = World_Vector.y;
+          this.Z_gl = World_Vector.z;
+                  
+          return [this.X_gl, this.Y_gl, this.Z_gl];
+        }
+        add_list(){
+          return {"id": this.uuid,   
+            "type" : this.type,
+            "X_gl" : this.X_gl,   
+            "Y_gl" : this.Y_gl,
+            "Z_gl" : this.Z_gl,
+            "K" : this.K
+          };
+            
+        }
+      
 }
 
 class Edge_new extends THREE.Mesh
 {
-    constructor( geometry, material, start_node, end_node) 
+    constructor( geometry, material, start_node, end_node, type, Length, DN, ghost, k_t, kvelocity) 
       {
             super( geometry, material);
             this.start_node=start_node;
             this.end_node= end_node;
             this.name='Edge_new';
-
+            this.type=type;
+            this.Length=Length;
+            this.DN = DN;
+            this.ghost = ghost;
+            this.k_t = k_t;
+            this.kvelocity = kvelocity;
 
             STATE.Three_D_objects.push(this);
-
-            // this.position.set(start_node.position.x,start_node.position.y, start_node.position.z);
-            // this.point2 = new THREE.Vector3(end_node.position.x,end_node.position.y, end_node.position.z)
-            // this.lookAt(this.point2);
-            // Line
-
-            // const path = new THREE.Line(start_node.position, end_node.position)
-
-
-
-            // console.log("Начальаня точка ребра",start_node.position);
-            // console.log("Конечная точка ребра",end_node.position);
-            
+                        
       }
-
+      add_list(){
+          return {"id": this.uuid,   
+            "type" : this.type,   
+            "DN" : this.DN,  
+            "Length" : this.Length,   
+            "start_node" : this.start_node.uuid,
+            "end_node" : this.end_node.uuid,
+            "ghost": this.ghost,
+            "k_t": this.k_t,
+            "kvelocity": this.kvelocity
+          };
+                        
+          
+      }
       // CreatePipeline () {
       //   alert('dfdfdf');
       //   // 1. Создаем общие геометрии и материалы

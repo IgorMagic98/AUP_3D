@@ -49,79 +49,79 @@ class UIApp {
 
 
 
-    document.getElementById("menuNew").onclick = () => {
-      document.getElementById("newProjectModal").classList.add("active");
-      document.getElementById("projectNameInput").value = "";
-      document.getElementById("projectFolderPath").value = "";
-      STATE.project.folderHandle = null;
-    };
+    // document.getElementById("menuNew").onclick = () => {
+    //   document.getElementById("newProjectModal").classList.add("active");
+    //   document.getElementById("projectNameInput").value = "";
+    //   document.getElementById("projectFolderPath").value = "";
+    //   STATE.project.folderHandle = null;
+    // };
 
-    document.getElementById("menuOpen").onclick = () => this.project.open();
-    document.getElementById("menuSave").onclick = () => this.project.save();
+    // document.getElementById("menuOpen").onclick = () => this.project.open();
+    // document.getElementById("menuSave").onclick = () => this.project.save();
 
     
-    document.getElementById("menuSplitSegment").onclick = () =>
-      this.split.startSegmentMode();
-    document.getElementById("menuSplitPipeline").onclick = () =>
-      this.split.openPipelineModal();
-    document.getElementById("menuDuplicateObject").onclick = () => {
-      const o = STATE.objects.find(
-        (x) => x.id === STATE.selectedObjectId && x.type === "pipeline",
-      );
-      if (o) this.editor.startDuplicate(o);
-      else Utils.showStatus("Выберите трубопровод в дереве");
-    };
+    // document.getElementById("menuSplitSegment").onclick = () =>
+    //   this.split.startSegmentMode();
+    // document.getElementById("menuSplitPipeline").onclick = () =>
+    //   this.split.openPipelineModal();
+    // document.getElementById("menuDuplicateObject").onclick = () => {
+    //   const o = STATE.objects.find(
+    //     (x) => x.id === STATE.selectedObjectId && x.type === "pipeline",
+    //   );
+    //   if (o) this.editor.startDuplicate(o);
+    //   else Utils.showStatus("Выберите трубопровод в дереве");
+    // };
 
-    document.getElementById("menuConnectPoints").onclick = () => {
-      if (STATE.connectPointsMode.active) {
-        this.input._cancelConnectPoints();
-      } else {
-        STATE.connectPointsMode.active = true;
-        STATE.connectPointsMode.selectedPoints = [];
-        Utils.showStatus("Выберите 2 шара");
-      }
-    };
+    // document.getElementById("menuConnectPoints").onclick = () => {
+    //   if (STATE.connectPointsMode.active) {
+    //     this.input._cancelConnectPoints();
+    //   } else {
+    //     STATE.connectPointsMode.active = true;
+    //     STATE.connectPointsMode.selectedPoints = [];
+    //     Utils.showStatus("Выберите 2 шара");
+    //   }
+    // };
 
-    document.getElementById("menuConnectBranches").onclick = () => {
-      if (STATE.connectMode.active) {
-        STATE.connectMode.active = false;
-        STATE.connectMode.selectedBranches = [];
-      } else {
-        STATE.connectMode.active = true;
-        STATE.connectMode.selectedBranches = [];
-        Utils.showStatus("Выберите 2 узла");
-      }
-    };
+    // document.getElementById("menuConnectBranches").onclick = () => {
+    //   if (STATE.connectMode.active) {
+    //     STATE.connectMode.active = false;
+    //     STATE.connectMode.selectedBranches = [];
+    //   } else {
+    //     STATE.connectMode.active = true;
+    //     STATE.connectMode.selectedBranches = [];
+    //     Utils.showStatus("Выберите 2 узла");
+    //   }
+    // };
 
-    document.getElementById("menuCreateBranch").onclick = () => {
-      this._updateCreateBranchInputs(4);
-      document.getElementById("createBranchSprCount").value = 4;
-      document.getElementById("createBranchModal").classList.add("active");
-    };
+    // document.getElementById("menuCreateBranch").onclick = () => {
+    //   this._updateCreateBranchInputs(4);
+    //   document.getElementById("createBranchSprCount").value = 4;
+    //   document.getElementById("createBranchModal").classList.add("active");
+    // };
 
-    document.getElementById("menuDuplicateBranch").onclick = () => {
-      const o = STATE.objects.find(
-        (x) => x.id === STATE.selectedObjectId && x.type === "branch",
-      );
-      if (o) this.editor.startDuplicate(o);
-      else Utils.showStatus("Выберите ветку в дереве");
-    };
+    // document.getElementById("menuDuplicateBranch").onclick = () => {
+    //   const o = STATE.objects.find(
+    //     (x) => x.id === STATE.selectedObjectId && x.type === "branch",
+    //   );
+    //   if (o) this.editor.startDuplicate(o);
+    //   else Utils.showStatus("Выберите ветку в дереве");
+    // };
 
-    document.getElementById("menuCreateRow").onclick = () => {
-      document.getElementById("createRowLeftCount").value = 3;
-      document.getElementById("createRowRightCount").value = 3;
-      this._updateCreateRowSideInputs("Left", 3);
-      this._updateCreateRowSideInputs("Right", 3);
-      document.getElementById("createRowModal").classList.add("active");
-    };
+    // document.getElementById("menuCreateRow").onclick = () => {
+    //   document.getElementById("createRowLeftCount").value = 3;
+    //   document.getElementById("createRowRightCount").value = 3;
+    //   this._updateCreateRowSideInputs("Left", 3);
+    //   this._updateCreateRowSideInputs("Right", 3);
+    //   document.getElementById("createRowModal").classList.add("active");
+    // };
 
-    document.getElementById("menuDuplicateRow").onclick = () => {
-      const o = STATE.objects.find(
-        (x) => x.id === STATE.selectedObjectId && x.type === "sprinkler_row",
-      );
-      if (o) this.editor.startDuplicate(o);
-      else Utils.showStatus("Выберите рядок в дереве");
-    };
+    // document.getElementById("menuDuplicateRow").onclick = () => {
+    //   const o = STATE.objects.find(
+    //     (x) => x.id === STATE.selectedObjectId && x.type === "sprinkler_row",
+    //   );
+    //   if (o) this.editor.startDuplicate(o);
+    //   else Utils.showStatus("Выберите рядок в дереве");
+    // };
 
     // document.getElementById("arm_valve").onclick = () => {
     //   STATE.insertValveMode = !STATE.insertValveMode;
@@ -151,31 +151,31 @@ class UIApp {
       'arm_reg': 'reg'
     };
 
-    Object.entries(armatureButtons).forEach(([btnId, armatureType]) => {
-      document.getElementById(btnId).onclick = () => {
-        if (STATE.insertArmatureMode === armatureType) {
-          // Если уже выбран этот тип — отключаем режим
-          STATE.insertArmatureMode = null;
-          document.getElementById(btnId).classList.remove('active');
-          Utils.showStatus('Режим вставки арматуры отключен');
-        } else {
-          // Выбираем новый тип
-          STATE.insertArmatureMode = armatureType;
+    // Object.entries(armatureButtons).forEach(([btnId, armatureType]) => {
+    //   document.getElementById(btnId).onclick = () => {
+    //     if (STATE.insertArmatureMode === armatureType) {
+    //       // Если уже выбран этот тип — отключаем режим
+    //       STATE.insertArmatureMode = null;
+    //       document.getElementById(btnId).classList.remove('active');
+    //       Utils.showStatus('Режим вставки арматуры отключен');
+    //     } else {
+    //       // Выбираем новый тип
+    //       STATE.insertArmatureMode = armatureType;
           
-          // Снимаем выделение со всех кнопок арматуры
-          Object.keys(armatureButtons).forEach(id => {
-            document.getElementById(id).classList.remove('active');
-          });
+    //       // Снимаем выделение со всех кнопок арматуры
+    //       Object.keys(armatureButtons).forEach(id => {
+    //         document.getElementById(id).classList.remove('active');
+    //       });
           
-          // Выделяем нажатую кнопку
-          document.getElementById(btnId).classList.add('active');
+    //       // Выделяем нажатую кнопку
+    //       document.getElementById(btnId).classList.add('active');
           
-          // Показываем подсказку из класса Armature
-          const name = this.armature.getTypeInfo(armatureType).name;
-          Utils.showStatus(`🔧 ${name}. Кликните по трубе.`);
-        }
-      };
-    });
+    //       // Показываем подсказку из класса Armature
+    //       const name = this.armature.getTypeInfo(armatureType).name;
+    //       Utils.showStatus(`🔧 ${name}. Кликните по трубе.`);
+    //     }
+    //   };
+    // });
 
 
     ["src_tank", "src_city", "src_pump"].forEach((id) => {
@@ -222,6 +222,30 @@ class UIApp {
   }
 
   _bindPipelineBuilderButtons() {
+
+    document.querySelectorAll("#createBranchModal .axis-btn").forEach((b) => {
+      b.addEventListener("click", (e) => {
+        document
+          .querySelectorAll("#createBranchModal .axis-btn")
+          .forEach((x) => x.classList.remove("active"));
+        e.currentTarget.classList.add("active");
+        STATE.pipeline.axis = e.currentTarget.dataset.axis;
+        this.pipeline.updatePreview();
+      });
+    });
+
+    document.querySelectorAll("#pipelineBuilder .axis-btn-rot").forEach((b) => {
+      b.addEventListener("click", (e) => {
+        document
+          .querySelectorAll("#pipelineBuilder .axis-btn-rot")
+          .forEach((x) => x.classList.remove("active"));
+        e.currentTarget.classList.add("active");
+        STATE.pipeline.axis = e.currentTarget.dataset.axis;
+        this.pipeline.updatePreview();
+      });
+    });
+
+
     document.querySelectorAll("#pipelineBuilder .axis-btn").forEach((b) => {
       b.addEventListener("click", (e) => {
         document
@@ -275,12 +299,12 @@ class UIApp {
     // ============================================
 
     // Кнопка "Новый проект..." в ribbon — открывает модалку
-    document.getElementById("menuNew").onclick = () => {
-      document.getElementById("newProjectModal").classList.add("active");
-      document.getElementById("projectNameInput").value = "";
-      document.getElementById("projectFolderPath").value = "";
-      STATE.project.folderHandle = null;
-    };
+    // document.getElementById("menuNew").onclick = () => {
+    //   document.getElementById("newProjectModal").classList.add("active");
+    //   document.getElementById("projectNameInput").value = "";
+    //   document.getElementById("projectFolderPath").value = "";
+    //   STATE.project.folderHandle = null;
+    // };
 
     // ✅ ВОТ ЭТОЙ СТРОКИ НЕ ХВАТАЛО — кнопка "Выбрать папку"
     document.getElementById("selectFolderBtn").onclick = async () => {
@@ -338,42 +362,42 @@ class UIApp {
       }
     };
 
-    document.getElementById("createBranchUpdateBtn").onclick = () => {
-      const c = Utils.clamp(
-        parseInt(document.getElementById("createBranchSprCount").value) || 1,
-        1,
-        50,
-      );
-      document.getElementById("createBranchSprCount").value = c;
-      this._updateCreateBranchInputs(c);
-    };
+    // document.getElementById("createBranchUpdateBtn").onclick = () => {
+    //   const c = Utils.clamp(
+    //     parseInt(document.getElementById("createBranchSprCount").value) || 1,
+    //     1,
+    //     50,
+    //   );
+    //   document.getElementById("createBranchSprCount").value = c;
+    //   this._updateCreateBranchInputs(c);
+    // };
 
-    document.getElementById("createBranchApplyBtn").onclick = () => {
-      const { lengths, diameters } = this._getCreateBranchData();
-      if (!lengths.length) {
-        Utils.showStatus("Нет участков!");
-        return;
-      }
+    // document.getElementById("createBranchApplyBtn").onclick = () => {
+    //   const { lengths, diameters } = this._getCreateBranchData();
+    //   if (!lengths.length) {
+    //     Utils.showStatus("Нет участков!");
+    //     return;
+    //   }
 
-      STATE.objectCounter++;
-      STATE.branchCounter++;
+    //   STATE.objectCounter++;
+    //   STATE.branchCounter++;
 
-      const br = Factory.createBranch(lengths, diameters, STATE.objectCounter);
-      br.position.set(0, 5, 0);
-      br.userData.number = STATE.branchCounter;
+    //   const br = Factory.createBranch(lengths, diameters, STATE.objectCounter);
+    //   br.position.set(0, 5, 0);
+    //   br.userData.number = STATE.branchCounter;
 
-      Engine.scene.add(br);
-      STATE.objects.push({
-        id: STATE.objectCounter,
-        type: "branch",
-        root: br,
-        userData: br.userData,
-      });
+    //   Engine.scene.add(br);
+    //   STATE.objects.push({
+    //     id: STATE.objectCounter,
+    //     type: "branch",
+    //     root: br,
+    //     userData: br.userData,
+    //   });
 
-      document.getElementById("createBranchModal").classList.remove("active");
-      Tree.update();
-      Utils.showStatus(`Ветка №${STATE.branchCounter} создана`);
-    };
+    //   document.getElementById("createBranchModal").classList.remove("active");
+    //   Tree.update();
+    //   Utils.showStatus(`Ветка №${STATE.branchCounter} создана`);
+    // };
 
     document.getElementById("createRowCancelBtn").onclick = () =>
       document.getElementById("createRowModal").classList.remove("active");
@@ -450,8 +474,8 @@ class UIApp {
     document.getElementById("graphDownloadBtn").onclick = () =>
       this.graph.downloadJson();
 
-    document.getElementById("graphsendBtn").onclick = () =>
-      this.graph.sendJson();
+    // document.getElementById("graphsendBtn").onclick = () =>
+    //   this.graph.sendJson();
     document.getElementById("graphCopyJson").onclick = () => {
       document.getElementById("graphJsonOutput").select();
       document.execCommand("copy");
@@ -642,31 +666,31 @@ class UIApp {
       }
     });
 
-    document.getElementById("splitApplyBtn").onclick = () =>
-      this.split.applySplitPipeline();
+    // document.getElementById("splitApplyBtn").onclick = () =>
+    //   this.split.applySplitPipeline();
 
-    document.getElementById("splitUpdateBtn").onclick = () => {
-      const c = Utils.clamp(
-        parseInt(document.getElementById("splitSegCount").value) || 1,
-        1,
-        50,
-      );
-      document.getElementById("splitSegCount").value = c;
-      this.split._updateSplitInputs(c);
-    };
+    // document.getElementById("splitUpdateBtn").onclick = () => {
+    //   const c = Utils.clamp(
+    //     parseInt(document.getElementById("splitSegCount").value) || 1,
+    //     1,
+    //     50,
+    //   );
+    //   document.getElementById("splitSegCount").value = c;
+    //   this.split._updateSplitInputs(c);
+    // };
 
-    document.getElementById("splitEqualBtn").onclick = () => {
-      const o = STATE.objects.find((x) => x.id === STATE.currentSplitPipeId);
-      if (!o) return;
-      const tl =
-        parseFloat(document.getElementById("splitTotalLength").textContent) ||
-        0;
-      const c = parseInt(document.getElementById("splitSegCount").value) || 1;
-      document
-        .querySelectorAll("#splitInputs .spLen")
-        .forEach((i) => (i.value = (tl / c).toFixed(2)));
-      this.split._recalcSplitTotal();
-    };
+    // document.getElementById("splitEqualBtn").onclick = () => {
+    //   const o = STATE.objects.find((x) => x.id === STATE.currentSplitPipeId);
+    //   if (!o) return;
+    //   const tl =
+    //     parseFloat(document.getElementById("splitTotalLength").textContent) ||
+    //     0;
+    //   const c = parseInt(document.getElementById("splitSegCount").value) || 1;
+    //   document
+    //     .querySelectorAll("#splitInputs .spLen")
+    //     .forEach((i) => (i.value = (tl / c).toFixed(2)));
+    //   this.split._recalcSplitTotal();
+    // };
 
     ["splitSegCancelBtn", "splitSegmentModal"].forEach((id) => {
       const el = document.getElementById(id);
@@ -684,26 +708,26 @@ class UIApp {
     document.getElementById("splitSegApplyBtn").onclick = () =>
       this.split.applySplitSegment();
 
-    document.getElementById("splitSegUpdateBtn").onclick = () => {
-      const c = Utils.clamp(
-        parseInt(document.getElementById("splitSegCountInput").value) || 1,
-        1,
-        50,
-      );
-      document.getElementById("splitSegCountInput").value = c;
-      this.split._updateSplitSegmentInputs(c);
-    };
+    // document.getElementById("splitSegUpdateBtn").onclick = () => {
+    //   const c = Utils.clamp(
+    //     parseInt(document.getElementById("splitSegCountInput").value) || 1,
+    //     1,
+    //     50,
+    //   );
+    //   document.getElementById("splitSegCountInput").value = c;
+    //   this.split._updateSplitSegmentInputs(c);
+    // };
 
-    document.getElementById("splitSegEqualBtn").onclick = () => {
-      if (!this.split._splitSegmentData) return;
-      const tl = this.split._splitSegmentData.length;
-      const c =
-        parseInt(document.getElementById("splitSegCountInput").value) || 1;
-      document
-        .querySelectorAll("#splitSegInputs .ssLen")
-        .forEach((i) => (i.value = (tl / c).toFixed(2)));
-      this.split._recalcSplitSegmentTotal();
-    };
+    // document.getElementById("splitSegEqualBtn").onclick = () => {
+    //   if (!this.split._splitSegmentData) return;
+    //   const tl = this.split._splitSegmentData.length;
+    //   const c =
+    //     parseInt(document.getElementById("splitSegCountInput").value) || 1;
+    //   document
+    //     .querySelectorAll("#splitSegInputs .ssLen")
+    //     .forEach((i) => (i.value = (tl / c).toFixed(2)));
+    //   this.split._recalcSplitSegmentTotal();
+    // };
 
     ["valveEditCancelBtn", "editValveModal"].forEach((id) => {
       const el = document.getElementById(id);
@@ -846,7 +870,7 @@ class UIApp {
     openValveEditModal(id) { this.editor.openValveEditModal(id); }
     startAttachMode(obj) { this.editor.startAttachMode(obj); }
     startDuplicateMode(obj) { this.editor.startDuplicateMode(obj); }
-    openSplitPipelineModal(id) { this.split.openPipelineModal(id); }
+    // openSplitPipelineModal(id) { this.split.openPipelineModal(id); }
     highlightEntireObject(obj) { this.visuals.highlightEntireObject(obj); }
     highlightSingleMesh(mesh) { this.visuals.highlightSingleMesh(mesh); }
     unhighlightAll() { this.visuals.unhighlightAll(); }

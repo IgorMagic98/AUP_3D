@@ -20,6 +20,9 @@ class PipelineBuilder {
 
         document.querySelectorAll('#pipelineBuilder .axis-btn').forEach(b => b.classList.remove('active'));
         document.querySelector('#pipelineBuilder .axis-btn[data-axis="y"]').classList.add('active');
+
+        document.querySelectorAll('#createBranchModal .axis-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('#createBranchModal .axis-btn[data-axis="y"]').classList.add('active');
         
         document.querySelectorAll('#pipelineBuilder .dir-btn').forEach(b => b.classList.remove('active'));
         document.querySelector('#pipelineBuilder .dir-btn[data-dir="+"]').classList.add('active');
