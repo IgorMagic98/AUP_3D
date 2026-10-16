@@ -633,12 +633,6 @@ async function sendJsonAndVisualize(v) {
     }
 }
 
-
-
-
-
-
-
 // функция для контроля узлов отработка 
 function logPipelineTree() {
     console.log("=== ОТЧЕТ ПО ТРУБОПРОВОДНОЙ СЕТИ ===");
@@ -692,14 +686,6 @@ function logPipelineTree() {
     }
     console.log("====================================");
 }
-
-
-
-
-
-
-
-
 
 // ============================================================================
 // 1. Вспомогательная функция для создания текстовых меток (Sprite)
@@ -829,17 +815,17 @@ function visualizeResults(result) {
         );
 
         if (nodeObj) {
-            let labelText = `P: ${data.pressure_m.toFixed(3)} м`;
+            let labelText = `P = ${data.pressure_m.toFixed(4)} м`;
             let labelColor = '#00ff00'; // Зеленый по умолчанию
 
             if (data.type === 'sprinkler') {
-                labelText += `\nQ= ${data.sprinkler_flow_l_s.toFixed(3)} л/с`;
-                // Подсветка красным, если давление ниже требуемого (19.17 м)
-                if (data.pressure_m < 19.17) {
+                labelText += `\nQ = ${data.sprinkler_flow_l_s.toFixed(4)} л/с`;
+                // Подсветка красным, если давление ниже требуемого (10 м)
+                if (data.pressure_m < 10) {
                     labelColor = '#ff3333'; 
                 }
             } else if (data.type === 'source') {
-                labelText += `\nQ= ${result.summary.total_flow_l_s.toFixed(3)} л/с`;
+                labelText += `\nQ= ${result.summary.total_flow_l_s.toFixed(4)} л/с`;
                 labelColor = '#ffff00'; // Желтый для источника
             }
 

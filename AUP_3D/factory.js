@@ -12,7 +12,7 @@ class Node_new extends THREE.Mesh
           this.X_gl=0;
           this.Y_gl=0;
           this.Z_gl=0;
-          this.K =0.47;
+          this.K =0.56;
           STATE.Three_D_objects.push(this);
         }
           update_Global() {

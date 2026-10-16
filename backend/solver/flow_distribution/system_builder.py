@@ -29,8 +29,8 @@ import jax.numpy as jnp
 jax.config.update("jax_enable_x64", True)
 
 # Значения по умолчанию
-DEFAULT_K_SPRINKLER = 0.47
-DEFAULT_PRESSURE_TARGET = 19.17
+DEFAULT_K_SPRINKLER = 0.56
+DEFAULT_PRESSURE_TARGET = 10.00
 
 
 # ============================================================================
@@ -503,6 +503,8 @@ class HydraulicSystemBuilder:
         print("ДИАГНОСТИКА ГИДРАВЛИЧЕСКОЙ МОДЕЛИ")
         print("=" * 60)
 
+
+        print(f"K_out: {self.K_out}")
         print(f"N узлов: {self.N}")
         print(f"M труб: {self.M}")
         print(f"Потребителей: {self.n_out}")
