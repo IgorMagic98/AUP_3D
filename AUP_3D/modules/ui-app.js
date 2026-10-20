@@ -234,6 +234,29 @@ class UIApp {
       });
     });
 
+    document.querySelectorAll("#createBranchModal .axis-btn-rot").forEach((b) => {
+      b.addEventListener("click", (e) => {
+        document
+          .querySelectorAll("#createBranchModal .axis-btn-rot")
+          .forEach((x) => x.classList.remove("active"));
+        e.currentTarget.classList.add("active");
+        STATE.pipeline.axis = e.currentTarget.dataset.axis;
+        this.pipeline.updatePreview();
+      });
+    });
+
+    document.querySelectorAll("#createBranchModal .dir-btn").forEach((b) => {
+      b.addEventListener("click", (e) => {
+        document
+          .querySelectorAll("#createBranchModal .dir-btn")
+          .forEach((x) => x.classList.remove("active"));
+        e.currentTarget.classList.add("active");
+        STATE.pipeline.direction = e.currentTarget.dataset.dir;
+        this.pipeline.updatePreview();
+      });
+    });
+
+
     document.querySelectorAll("#pipelineBuilder .axis-btn-rot").forEach((b) => {
       b.addEventListener("click", (e) => {
         document

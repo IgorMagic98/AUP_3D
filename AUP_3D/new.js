@@ -30,8 +30,7 @@ function Add_data_base () {
                 Data_base.Node.push(properties);
             }
             // console.log("child_data_base", child)
-            // const properties = child.add_list();
-            
+            // const properties = child.add_list();            
         }       
     });
     // Data_base.push(Node);
@@ -40,9 +39,7 @@ function Add_data_base () {
     // sendJson(Data_base);
     sendJsonAndVisualize(Data_base);
 }
-
-// функция для вклчюения отображения блока созданяи ветки
-function Pipe_Line_visible_block () {
+function Check_nodes_scene() {
     // проверка существования узла
     let Check_Nodes = false;
     Engine.scene.traverse((child) => {       
@@ -50,6 +47,17 @@ function Pipe_Line_visible_block () {
             Check_Nodes = true;
         }
     });    
+    // if (Check_Nodes) {    
+    //     if (!Engine.selectedObject || (Engine.selectedObject.type !== 'Node' && Engine.selectedObject.type !== 'Sprinkler')) {
+    //         alert("Перед созданием трубопровода - выберите существующий узел!");
+    //         return true; 
+    //     }
+    // }
+    return Check_Nodes;
+}
+// функция для вклчюения отображения блока созданяи ветки
+function Pipe_Line_visible_block () {
+    let Check_Nodes = Check_nodes_scene();
     if (Check_Nodes) {    
         if (!Engine.selectedObject || (Engine.selectedObject.type !== 'Node' && Engine.selectedObject.type !== 'Sprinkler')) {
             alert("Перед созданием трубопровода - выберите существующий узел!");
@@ -57,24 +65,37 @@ function Pipe_Line_visible_block () {
         }
     }
     document.getElementById("pipelineBuilder").style.display = 'block';
+    document.body.classList.add('builder-active');
     // логика вызова данных дял определенного DN определенного типа трубопровода    
-    if (Engine.selectedObject && Engine.selectedObject.type === 'Node'||Engine.selectedObject && Engine.selectedObject.type === 'Sprinkler') { 
-        // создаем вектор для записи мировых координат выделенного объекта
-        const selected_World_Pos = new THREE.Vector3();
-        // Получаем мировые координаты выделенного объекта
-        Engine.selectedObject.getWorldPosition(selected_World_Pos);
-        // Получаем мировые координаты выделенного меша
-        // const selectedPos = Engine.selectedObject.position;        
-        // Автоматически заполняем инпуты в HTML координатами выделенного узла
-        document.getElementById("pbCX").value = selected_World_Pos.x;
-        document.getElementById("pbCY").value = selected_World_Pos.y;
-        document.getElementById("pbCZ").value = selected_World_Pos.z;
-    } else {             
-        document.getElementById("pbCX").value = 0;
-        document.getElementById("pbCY").value = 0;
-        document.getElementById("pbCZ").value = 0;
-    }    
-    document.getElementById("pbConfirm").onclick = () => { 
+    // if (Engine.selectedObject && Engine.selectedObject.type === 'Node'||Engine.selectedObject && Engine.selectedObject.type === 'Sprinkler') { 
+    //     // создаем вектор для записи мировых координат выделенного объекта
+    //     const selected_World_Pos = new THREE.Vector3();
+    //     // Получаем мировые координаты выделенного объекта
+    //     Engine.selectedObject.getWorldPosition(selected_World_Pos);
+    //     // Получаем мировые координаты выделенного меша
+    //     // const selectedPos = Engine.selectedObject.position;        
+    //     // Автоматически заполняем инпуты в HTML координатами выделенного узла
+    //     document.getElementById("pbCX").value = selected_World_Pos.x;
+    //     document.getElementById("pbCY").value = selected_World_Pos.y;
+    //     document.getElementById("pbCZ").value = selected_World_Pos.z;
+    // } else {             
+    //     document.getElementById("pbCX").value = 0;
+    //     document.getElementById("pbCY").value = 0;
+    //     document.getElementById("pbCZ").value = 0;
+    // }    
+    document.getElementById("pbConfirm").onclick = () => {
+        let Check_Nodes_click = Check_nodes_scene();
+        if (Check_Nodes_click) {  
+            Check_Nodes = true;
+            if (!Engine.selectedObject || (Engine.selectedObject.type !== 'Node' && Engine.selectedObject.type !== 'Sprinkler')) {
+                alert("Перед созданием трубопровода - выберите существующий узел!");
+                return; 
+            }
+        }
+        
+        // if (!Engine.selectedObject) {
+        //     alert("Перед созданием трубопровода - выберите существующий узел!");
+        // }
         const pbCX = parseFloat(document.getElementById("pbCX").value);
         const pbCY = parseFloat(document.getElementById("pbCY").value);
         const pbCZ = parseFloat(document.getElementById("pbCZ").value);        
@@ -92,21 +113,21 @@ function Pipe_Line_visible_block () {
         const k_t = parseFloat(pbDiameter.selectedOptions[0].dataset.k_t);
         const kvelocity = parseFloat(pbDiameter.selectedOptions[0].dataset.kvelocity);
         // console.log("type_tube",type_tube);
-        console.log("=== ДАННЫЕ ДЛЯ СОЗДАНИЯ ТРУБОПРОВОДА ===");
-        console.table({
-            "Координата X": pbCX,
-            "Координата Y": pbCY,
-            "Координата Z": pbCZ,
-            "Ось направления": activeAxis,
-            "Знак направления": activeAxis_direction,
-            "Длина участка (м)": pbLength,
-            "Ось вращения вокруг": activeAxis_rotation,
-            "Угол поворота (град)": rotate_value,
-            "Гост на трубы": type_tube,
-            "Номинальный ДН трубы": DN_tube,
-            "Коэффициент k_t": k_t,
-            "Коэффициент kvelocity": kvelocity
-        });
+        // console.log("=== ДАННЫЕ ДЛЯ СОЗДАНИЯ ТРУБОПРОВОДА ===");
+        // console.table({
+        //     "Координата X": pbCX,
+        //     "Координата Y": pbCY,
+        //     "Координата Z": pbCZ,
+        //     "Ось направления": activeAxis,
+        //     "Знак направления": activeAxis_direction,
+        //     "Длина участка (м)": pbLength,
+        //     "Ось вращения вокруг": activeAxis_rotation,
+        //     "Угол поворота (град)": rotate_value,
+        //     "Гост на трубы": type_tube,
+        //     "Номинальный ДН трубы": DN_tube,
+        //     "Коэффициент k_t": k_t,
+        //     "Коэффициент kvelocity": kvelocity
+        // });
         CreatePipeline(pbCX, pbCY, pbCZ, activeAxis, activeAxis_direction, pbLength, activeAxis_rotation, rotate_value, type_tube, 
             DN_tube, k_t, kvelocity, Check_Nodes);
     };
@@ -116,18 +137,22 @@ function Pipe_Line_visible_block () {
 // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 // Функция закрытия модального окна создания 
 function cancel(name) {
-    document.getElementById(name).style.display = 'none';        
+    document.getElementById(name).style.display = 'none';
+    document.body.classList.remove('builder-active');        
 }
 
 // функция для создания трубопровода, включена рповерка начальных условий при выборре узла, и проверка конечной точки при совпадении координат
 function CreatePipeline (pbCX, pbCY, pbCZ, activeAxis, activeAxis_direction, pbLength, activeAxis_rotation, rotate_value, type_tube,
             pbDiameter, k_t, kvelocity, Check_Nodes) {
     // create_Pipe_line.style.display = 'block';
+    // console.log("activeAxis_direction1488888",activeAxis_direction);
     const Node_Geometry = new THREE.SphereGeometry(2*pbDiameter/1000, 32, 32);
     const Node_Material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });    
     const Edge_Material = new THREE.MeshBasicMaterial({ color: '#0F1379' });
+    console.log("Check_Nodes_121123",Check_Nodes)
     if (Check_Nodes) {
-        const [pbCX_end, pbCY_end, pbCZ_end] = calculation_end_node(pbCX, pbCY, pbCZ, pbLength, activeAxis)
+        const [pbCX_end, pbCY_end, pbCZ_end] = calculation_end_node(pbCX, pbCY, pbCZ, pbLength, activeAxis, activeAxis_direction,
+            activeAxis_rotation,rotate_value)
         let Node_End; 
 
         const check_node_end = check_End_Node(pbCX_end, pbCY_end, pbCZ_end);
@@ -162,7 +187,8 @@ function CreatePipeline (pbCX, pbCY, pbCZ, activeAxis, activeAxis_direction, pbL
         const Node_Material_start = new THREE.MeshBasicMaterial({ color: 0x800080 });
         const Node_Start = new Node_new(Node_Geometry, Node_Material_start, 'Source');
         Node_Start.position.set(pbCX, pbCY, pbCZ);
-        const [pbCX_end, pbCY_end, pbCZ_end] = calculation_end_node(pbCX, pbCY, pbCZ, pbLength, activeAxis)
+        const [pbCX_end, pbCY_end, pbCZ_end] = calculation_end_node(pbCX, pbCY, pbCZ, pbLength, activeAxis, activeAxis_direction,
+            activeAxis_rotation,rotate_value)
         const Node_End = new Node_new(Node_Geometry, Node_Material, 'Node');
         Node_End.position.set(pbCX_end, pbCY_end, pbCZ_end);    
         // console.log("Node_End",Node_End.position);
@@ -179,43 +205,47 @@ function CreatePipeline (pbCX, pbCY, pbCZ, activeAxis, activeAxis_direction, pbL
     update_Node_XYZ()
     console.log("Engine.scene.children",Engine.scene.children);
     console.log("STATE.Three_D_objects",STATE.Three_D_objects);
-    cancel("pipelineBuilder"); 
+    // cancel("pipelineBuilder"); 
 };
 // Функция расчета коенчного узла для трубопровода
-function calculation_end_node(pbCX, pbCY, pbCZ, pbLength, activeAxis){
-    let nextX=0;
-    let nextY=0;
-    let nextZ=0;
-    if (activeAxis==="x"){
-        nextX = pbCX+pbLength;
-        nextY = pbCY;
-        nextZ = pbCZ;
-    }
-    else if(activeAxis==="y"){
-        nextX = pbCX;
-        nextY = pbCY+pbLength;
-        nextZ = pbCZ;
-    }
-    else{
-        nextX = pbCX;
-        nextY = pbCY;
-        nextZ = pbCZ+pbLength;
-    }
-    // console.log("nextX",nextX)
-    // console.log("nextY",nextY)
-    // console.log("nextZ",nextZ)
-    return [nextX, nextY, nextZ]; 
+function calculation_end_node(pbCX, pbCY, pbCZ, pbLength, activeAxis, activeAxis_direction,
+    activeAxis_rotation,rotate_value)
+    {
+        let symbol = (activeAxis_direction === "+") ? 1 : -1;
+        
+        let offset = new THREE.Vector3(0, 0, 0);
+        
+        if (activeAxis === "x") offset.x = pbLength * symbol;
+        else if (activeAxis === "y") offset.y = pbLength * symbol;
+        else offset.z = pbLength * symbol;
+        
+        if (rotate_value && rotate_value !== 0) {
+            let radians = rotate_value * Math.PI / 180;
+                        
+            let rotationAxis = new THREE.Vector3(0, 0, 0);
+            if (activeAxis_rotation === "x") rotationAxis.x = 1;
+            else if (activeAxis_rotation === "y") rotationAxis.y = 1;
+            else rotationAxis.z = 1;
+            
+            offset.applyAxisAngle(rotationAxis, radians);
+        }
+
+        let nextX = pbCX + offset.x;
+        let nextY = pbCY + offset.y;
+        let nextZ = pbCZ + offset.z;        
+        
+        return [nextX, nextY, nextZ];
+        
 }
 
 // функция првоерки координат для конечного узла трубопровода
 function check_End_Node(pbCX_end, pbCY_end, pbCZ_end){
     let foundNode = null;    
     Engine.scene.traverse((child) => {
-        if (child.type === 'Node') { 
+        if (child.type === 'Node'|| child.type === 'Sprinkler') { 
             const child_World_Pos = new THREE.Vector3();
             child.getWorldPosition(child_World_Pos);                         
-            if (child_World_Pos.x === pbCX_end && child_World_Pos.y === pbCY_end && child_World_Pos.z === pbCZ_end) {
-                            
+            if (child_World_Pos.x === pbCX_end && child_World_Pos.y === pbCY_end && child_World_Pos.z === pbCZ_end) {                            
                 foundNode = child; 
             }
         }
@@ -244,7 +274,10 @@ function check_pipe_tube_Edit(){
         return;
     }
     document.getElementById("PipelineModal_Edit").style.display = 'block';
+    document.body.classList.add('builder-active');
     document.getElementById("number_pipe_edit").innerText = `${ Engine.selectedObject.name} id: ${Engine.selectedObject.id}`;
+    document.getElementById("type_pipe_edit").innerText = Engine.selectedObject.ghost;
+    document.getElementById("DN_pipe_edit").innerText = Engine.selectedObject.DN;
     document.getElementById("Length_pipe_edit").innerText = Engine.selectedObject.Length;
     
     // console.log("Engine.selectedObject",Engine.selectedObject);
@@ -259,8 +292,13 @@ function check_pipe_tube_Edit(){
 function edit_pipe_tube(Edge) {
     let start_node = Edge.start_node;
     let end_node = Edge.end_node;
-
-    const new_long = parseFloat(document.getElementById("pipe_edit").value);
+    const new_type_tube = document.getElementById("get_tube_pipe_edit").selectedOptions[0].textContent; // тип трубы (ГОСТ)
+        
+    const new_pbDiameter = document.getElementById("pbDiameter_edit"); //// элемент для удосбвтва вывода свойств
+    const new_DN_tube = parseFloat(new_pbDiameter.selectedOptions[0].textContent); ///// сами свойства
+    const new_k_t = parseFloat(new_pbDiameter.selectedOptions[0].dataset.k_t);
+    const new_kvelocity = parseFloat(new_pbDiameter.selectedOptions[0].dataset.kvelocity);
+    const new_long = parseFloat(document.getElementById("pipe_edit").value);    
     
     const start_World_Pos = new THREE.Vector3();
     const end_World_Pos = new THREE.Vector3();
@@ -278,18 +316,9 @@ function edit_pipe_tube(Edge) {
     // Переход из мировых координат в локальыне рордителя
     if (end_node.parent) {
         end_node.parent.worldToLocal(local_End_Node);
-    }
-    
+    }    
     end_node.position.copy(local_End_Node);
-    // end_node.X_gl = new_World_End.x;
-    // end_node.Y_gl = new_World_End.y;
-    // end_node.Z_gl = new_World_End.z;
-
-    // start_node.X_gl = start_World_Pos.x;
-    // start_node.Y_gl = start_World_Pos.y;
-    // start_node.Z_gl = start_World_Pos.z;    
     
-
     end_node.updateMatrixWorld(true); 
     start_node.updateMatrixWorld(true);
     Edge.updateMatrixWorld(true);
@@ -304,15 +333,24 @@ function edit_pipe_tube(Edge) {
     const new_Path = new THREE.LineCurve3(path_Start, path_End);
         
     Edge.geometry.dispose(); 
-    Edge.geometry = new THREE.TubeGeometry(new_Path, 64, Edge.DN / 2 / 1000, 12, false);
-    Edge.Length = new_long;
+    Edge.geometry = new THREE.TubeGeometry(new_Path, 64, new_DN_tube / 2 / 1000, 12, false);
     
+    Edge.ghost=new_type_tube;
+    Edge.DN=new_DN_tube;
+    Edge.k_t=new_k_t;
+    Edge.kvelocity=new_kvelocity;
+    Edge.Length = new_long;
+
+    const new_Node_Geometry = new THREE.SphereGeometry(2*new_DN_tube/1000, 32, 32);
+    Edge.start_node.geometry.dispose();
+    Edge.end_node.geometry.dispose();
+    Edge.start_node.geometry = new_Node_Geometry;
+    Edge.end_node.geometry = new_Node_Geometry;
     cancel("PipelineModal_Edit");
 
     update_Node_XYZ();
 
     console.log("Engine.scene.children_EDIT",Engine.scene.children);
-
     // check_position_node_for_edge(Edge.end_node);
     check_position_node_for_edge();
 
@@ -352,10 +390,22 @@ function Check_CreateBranch(){
     }
 
     document.getElementById("createBranchModal").style.display = 'block';
+    document.body.classList.add('builder-active');
     document.getElementById("createBranchCancelBtn").onclick = () => cancel("createBranchModal");
 
-    // const Count = parseFloat(document.getElementById("createBranchSprCount").value);
-
+    const sprCountInput = document.getElementById("createBranchSprCount");
+    sprCountInput.addEventListener("input", function() {
+        let Count = parseFloat(document.getElementById("createBranchSprCount").value);        
+        const tabContent = document.getElementById('myTabContent');                
+        tabContent.innerHTML = html_branch_content(Count);        
+        for (let i = 0; i < Count; i++) {
+            get_load_pipe("get_tube_pipe_sprinkler", `pbDiameter_sprinkler_${i}`);            
+            document.getElementById("get_tube_pipe_sprinkler").addEventListener("change", (event) => {
+                get_load_pbDiameter(event.target.value, `pbDiameter_sprinkler_${i}`);   
+            });
+        }
+    });
+    sprCountInput.dispatchEvent(new Event('input'));   
     document.getElementById("createBranchApplyBtn").onclick = () => create_branch(Engine.selectedObject);
     // cancel("createBranchModal");
 }
@@ -363,23 +413,15 @@ function Check_CreateBranch(){
 
 // функция создания новой ветки
 function create_branch(Node) {    
-    const Count = parseFloat(document.getElementById("createBranchSprCount").value);
+    
     const activeAxis = document.querySelector('#createBranchModal .axis-btn.active').dataset.axis;
+    const activeAxis_direction = document.querySelector('#createBranchModal .dir-btn.active').dataset.dir; // активное положение направления
+    const activeAxis_rotation = document.querySelector('#createBranchModal .axis-btn-rot.active').dataset.axis; // активная ось дял порворота
+    const rotate_value = parseFloat(document.getElementById("pbAngle_branch").value);   
 
-    const type_tube = document.getElementById("get_tube_pipe_sprinkler").selectedOptions[0].textContent; // тип трубы (ГОСТ)        
-    const pbDiameter_sprinkler = document.getElementById("pbDiameter_sprinkler"); //// элемент для удосбвтва вывода свойств
-    const DN_tube = parseFloat(pbDiameter_sprinkler.selectedOptions[0].textContent); ///// сами свойства
-    const k_t = parseFloat(pbDiameter_sprinkler.selectedOptions[0].dataset.k_t);
-    const kvelocity = parseFloat(pbDiameter_sprinkler.selectedOptions[0].dataset.kvelocity);
-
-    console.table({            
-            "Гост на трубы": type_tube,
-            "Номинальный ДН трубы": DN_tube,
-            "Коэффициент k_t": k_t,
-            "Коэффициент kvelocity": kvelocity
-        });
-    // const Node_Start = Engine.selectedObject;
-    // создание контейнера для мировых координат
+    const type_tube = document.getElementById("get_tube_pipe_sprinkler").selectedOptions[0].textContent; // тип трубы (ГОСТ)
+    const Count = parseFloat(document.getElementById("createBranchSprCount").value);
+    
     const start_World_Pos = new THREE.Vector3();
     Node.getWorldPosition(start_World_Pos);
     // Мировые координаты начального узла
@@ -387,28 +429,41 @@ function create_branch(Node) {
     let currentY = start_World_Pos.y;
     let currentZ = start_World_Pos.z;
     // Дефолтный материал
-    const Node_Geometry = new THREE.SphereGeometry(2 * 50 / 1000, 32, 32);
+    // const Node_Geometry = new THREE.SphereGeometry(2 * 50 / 1000, 32, 32);
     const Node_Material = new THREE.MeshBasicMaterial({ color: '#FF0000' });    
     const Edge_Material = new THREE.MeshBasicMaterial({ color: '#0F1379' });    
-    
-    
+
     let currentStartNode = Node;
     // Цикл для создания ветвей и новых оросителей
     for (let i = 0; i < Count; i++) {
+
+        const pbDiameter_sprinkler = document.getElementById(`pbDiameter_sprinkler_${i}`); //// элемент для удосбвтва вывода свойств
+        const new_DN_tube = parseFloat(pbDiameter_sprinkler.selectedOptions[0].textContent); ///// сами свойства
+        const new_k_t = parseFloat(pbDiameter_sprinkler.selectedOptions[0].dataset.k_t);
+        const new_kvelocity = parseFloat(pbDiameter_sprinkler.selectedOptions[0].dataset.kvelocity);
+        // const new_long = parseFloat(document.getElementById("pipe_edit").value);   
+
+
+        // const pbDiameter_sprinkler = parseFloat(document.getElementById(`pbDiameter_sprinkler_${i}`).value); //// элемент для удосбвтва вывода свойств
+        const pbLength_branch = parseFloat(document.getElementById(`pbLength_branch_${i}`).value); //// элемент для удосбвтва вывода свойств
         
-        const [pbCX_end, pbCY_end, pbCZ_end] = calculation_end_node(currentX, currentY, currentZ, 2, activeAxis);        
+        const [pbCX_end, pbCY_end, pbCZ_end] = calculation_end_node(currentX, currentY, currentZ, pbLength_branch, activeAxis,
+            activeAxis_direction, activeAxis_rotation, rotate_value);   
+                
         let currentEndNode;
+        console.log("new_DN_tube в создании ветки",new_DN_tube)
+        const Node_Geometry = new THREE.SphereGeometry(2 * new_DN_tube / 1000, 32, 32);
         // проверка на созданные орсоители пока не нужна 
-        // const check_node_end = check_End_Node(pbCX_end, pbCY_end, pbCZ_end);
-        // if (check_node_end) {
-        //     currentEndNode = check_node_end;
-        // } else {            
-        //     currentEndNode = new Node_new(Node_Geometry, Node_Material, 'Sprinkler');
-        //     currentEndNode.position.set(pbCX_end, pbCY_end, pbCZ_end);
-        // }
+        const check_node_end = check_End_Node(pbCX_end, pbCY_end, pbCZ_end);
+        if (check_node_end) {
+            currentEndNode = check_node_end;
+        } else {            
+            currentEndNode = new Node_new(Node_Geometry, Node_Material, 'Sprinkler');
+            currentEndNode.position.set(pbCX_end, pbCY_end, pbCZ_end);
+        }
         // Просто создаем новые узлы с типом орсоитель
-        currentEndNode = new Node_new(Node_Geometry, Node_Material, 'Sprinkler');
-        currentEndNode.position.set(pbCX_end, pbCY_end, pbCZ_end);
+        // currentEndNode = new Node_new(Node_Geometry, Node_Material, 'Sprinkler');
+        // currentEndNode.position.set(pbCX_end, pbCY_end, pbCZ_end);
 
         const step_Start_Pos = new THREE.Vector3();
         currentStartNode.getWorldPosition(step_Start_Pos);
@@ -417,10 +472,12 @@ function create_branch(Node) {
         currentEndNode.getWorldPosition(step_End_Pos);
         
         const path = new THREE.LineCurve3(step_Start_Pos, step_End_Pos);
-        const Pipe_visible = new THREE.TubeGeometry(path, 64, 50 / 2 / 1000, 12, false);
-                
-        const Pipe_connection = new Edge_new(Pipe_visible, Edge_Material, currentStartNode, currentEndNode, 'Edge', 2, DN_tube, type_tube,
-            k_t, kvelocity);
+        const Pipe_visible = new THREE.TubeGeometry(path, 64, new_DN_tube / 2 / 1000, 12, false);
+        
+        // const Pipe_connection = new Edge_new(Piepe_visible, Edge_Material, Node_Start, Node_End, 'Edge', pbLength, pbDiameter,
+        //      type_tube, k_t, kvelocity );
+        const Pipe_connection = new Edge_new(Pipe_visible, Edge_Material, currentStartNode, currentEndNode, 'Edge',pbLength_branch,
+            new_DN_tube, type_tube, new_k_t, new_kvelocity);
         
         currentStartNode.attach(Pipe_connection);
         Pipe_connection.attach(currentEndNode);
@@ -437,6 +494,28 @@ function create_branch(Node) {
     update_Node_XYZ();
 
 }
+
+
+function html_branch_content(Count) {
+    let html = '';
+    for (let i = 0; i < Count; i++) {
+        html += `
+            <div class="branch_segment" style="border-bottom: 1px solid #F3F2F8; margin-bottom: 15px; padding-bottom: 15px; ">
+                <div class="step">
+                    <span>Участок №${i + 1}</span>            
+                </div>
+                <div class="step">
+                    <span>Диаметр трубопровода DN</span>
+                    <select id="pbDiameter_sprinkler_${i}"></select>
+                    <span>Длина, м</span>
+                    <input type="number" id="pbLength_branch_${i}" value="5" step="0.1" min="0.1" max="100">
+                </div>                
+            </div>
+        `;
+    }
+    return html;
+}
+
 
 function check_position_node_for_edge() {
     Engine.scene.traverse((child) => {

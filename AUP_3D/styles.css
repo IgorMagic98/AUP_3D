@@ -379,10 +379,10 @@
 
 
 
-    #pipelineBuilder {      
+    #pipelineBuilder, #PipelineModal_Edit, #createBranchModal {      
       position: fixed;
       top: 25%;
-      right: 20px;   
+      right: 20px;
       
       background: #F3F2F8;
       padding: 0;
@@ -393,13 +393,23 @@
       color: #fff;
       font-size: 16px;
       min-width: 500px;
+      max-height: 70vh;    /* Окно не займет больше 70% высоты экрана */
+      overflow-y: auto;
     }
 
     /* #pipelineBuilder.active {
       display: block;
     } */
 
-    #pipelineBuilder .pipeline-header {
+    /* Когда билдер активен, блокируем всю панель ribbon-bar целиком */
+    body.builder-active .ribbon-bar,
+    body.builder-active .ribbon-bar * {
+        pointer-events: none !important; /* Намертво отключает клики на кнопках */
+        
+    }
+
+
+    #pipelineBuilder .pipeline-header, #PipelineModal_Edit .pipeline-header, #createBranchModal .pipeline-header{
       background:#0F1379;
       padding: 8px 12px;
       cursor: move;
@@ -410,17 +420,17 @@
       user-select: none;
     }
 
-    #pipelineBuilder .pipeline-header .title {
+    #pipelineBuilder .pipeline-header .title, #PipelineModal_Edit .pipeline-header .title, #createBranchModal .pipeline-header .title {
       font-weight: 600;
       font-size: 14px;
     }
 
-    #pipelineBuilder .pipeline-header .hint {
+    #pipelineBuilder .pipeline-header .hint, #PipelineModal_Edit .pipeline-header .hint,#createBranchModal .pipeline-header .hint {
       font-size: 10px;
       opacity: .7;
     }
 
-    #pipelineBuilder .pipeline-body {
+    #pipelineBuilder .pipeline-body, #PipelineModal_Edit .pipeline-body,#createBranchModal .pipeline-body {
       color: #0F1379;
       font-weight: bold;
       padding: 12px 16px;
@@ -429,13 +439,14 @@
       gap: 10px;
     }
 
-    #pipelineBuilder .step {
+    #pipelineBuilder .step, #PipelineModal_Edit .step,#createBranchModal .step {
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    #pipelineBuilder .axis-btn, #pipelineBuilder .axis-btn-rot, #pipelineBuilder .dir-btn, #createBranchModal .axis-btn {
+    #pipelineBuilder .axis-btn, #pipelineBuilder .axis-btn-rot, #pipelineBuilder .dir-btn, #createBranchModal .axis-btn,
+      #createBranchModal .dir-btn, #createBranchModal .axis-btn-rot {
       padding: 6px 10px;
       border: none;
       border-radius: 4px;
@@ -446,31 +457,34 @@
       color: #fff;
     }
 
-    #pipelineBuilder .axis-btn.active, #pipelineBuilder .axis-btn-rot.active, #pipelineBuilder .dir-btn.active, #createBranchModal .axis-btn.active {
+    #pipelineBuilder .axis-btn.active, #pipelineBuilder .axis-btn-rot.active, #pipelineBuilder .dir-btn.active, 
+      #createBranchModal .axis-btn.active, #createBranchModal .dir-btn.active, #createBranchModal .axis-btn-rot.active {
       background: #EC0000;
       color: #fff;
     }
 
-    #pipelineBuilder input[type=number] {
+    #pipelineBuilder input[type=number], #PipelineModal_Edit input[type=number],#createBranchModal input[type=number] {
       width: 60px;
       padding: 6px;
-      border: none;
+      border: 1px solid #EC0000;
+      /* border: none; */
       border-radius: 4px;
       font-size: 14px;
       font-weight: bold;
       text-align: right;
     }
 
-    #pipelineBuilder select {
+    #pipelineBuilder select, #PipelineModal_Edit select, #createBranchModal select {
       padding: 6px;
-      border: none;
+      border: 1px solid #EC0000;
+      /* border: none; */
       border-radius: 4px;
       font-size: 14px;
       font-weight: bold;
       background: #fff;
     }
 
-    #pipelineBuilder button {      
+    #pipelineBuilder button, #PipelineModal_Edit button, #createBranchModal button  {      
       padding: 8px 12px;
       border: none;
       border-radius: 6px;
@@ -478,11 +492,12 @@
       font-weight: 600;
       font-size: 14px;
     }
-    #pipelineBuilder button.cancel, #pipelineBuilder button.confirm {
+    #pipelineBuilder button.cancel, #pipelineBuilder button.confirm, #PipelineModal_Edit button.cancel,
+      #PipelineModal_Edit button.confirm, #createBranchModal button.cancel, #createBranchModal button.confirm {
       width: 50%;      
     }
 
-    #pipelineBuilder .confirm {
+    #pipelineBuilder .confirm, #PipelineModal_Edit .confirm, #createBranchModal .confirm  {
       background: #0F1379;
       color: #fff;
     }
@@ -492,7 +507,7 @@
       color: #fff;
     }
 
-    #pipelineBuilder .cancel {
+    #pipelineBuilder .cancel, #PipelineModal_Edit .cancel, #createBranchModal .cancel {
       background: #d32f2f;
       color: #fff;
     }
