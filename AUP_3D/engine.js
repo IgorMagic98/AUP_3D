@@ -103,6 +103,8 @@ const Engine = {
                 this.selectedObject = null;
             }
         }
+        this.update_Pipe_tube_coordinate();
+        this.update_Pipe_tube();
     },
 
     // 3. ФИЛЬТР: Находит первый THREE.Mesh в массиве пересечений
@@ -141,6 +143,44 @@ const Engine = {
 
         if (mesh.userData.originalColor !== undefined) {
             mesh.material.color.setHex(mesh.userData.originalColor); // Возвращаем родной цвет
+        }
+    },
+
+    update_Pipe_tube_coordinate() {
+        const selected = this.selectedObject;
+        const inputX = document.getElementById("pbCX");
+        const inputY = document.getElementById("pbCY");
+        const inputZ = document.getElementById("pbCZ");
+        const inputX_branch = document.getElementById("pbCX_branch");
+        const inputY_branch = document.getElementById("pbCY_branch");
+        const inputZ_branch = document.getElementById("pbCZ_branch");
+        if (selected && selected.type === 'Node'||selected && selected.type === 'Sprinkler') {
+            const worldPos = new THREE.Vector3();
+            selected.getWorldPosition(worldPos);
+            inputX.value = worldPos.x;
+            inputY.value = worldPos.y;
+            inputZ.value = worldPos.z;
+            inputX_branch.value = worldPos.x;
+            inputY_branch.value = worldPos.y;
+            inputZ_branch.value = worldPos.z;
+        }
+        // if (document.getElementById("createBranchModal").style.display === 'block') {
+        //     const worldPos = new THREE.Vector3();
+        //     selected.getWorldPosition(worldPos);
+            
+        // }
+    },
+    update_Pipe_tube() {
+        const selected = this.selectedObject;
+        // const id_name_tube = document.getElementById("number_pipe_edit");
+        // const ghost_tube = document.getElementById("type_pipe_edit");
+        // const DN_tube = document.getElementById("DN_pipe_edit");
+        // const Length_tube = document.getElementById("Length_pipe_edit");
+        if (selected && selected.type === 'Edge') {
+            document.getElementById("number_pipe_edit").innerText = `${ selected.name} id: ${selected.id}`;
+            document.getElementById("type_pipe_edit").innerText = selected.ghost;
+            document.getElementById("DN_pipe_edit").innerText = selected.DN;
+            document.getElementById("Length_pipe_edit").innerText = selected.Length;
         }
     },
 

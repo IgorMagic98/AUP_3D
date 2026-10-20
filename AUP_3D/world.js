@@ -5,8 +5,8 @@
 
 const World = {
     updateGroundSize(w, d) {
-        w = Utils.clamp(parseFloat(w) || 10, 2, 200);
-        d = Utils.clamp(parseFloat(d) || 10, 2, 200);
+        w = Utils.clamp(parseFloat(w) || 10, 2, 2000);
+        d = Utils.clamp(parseFloat(d) || 10, 2, 2000);
         document.getElementById('planeWidth').value = w;
         document.getElementById('planeDepth').value = d;
         
