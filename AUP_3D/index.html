@@ -49,6 +49,8 @@
             <button class="btn-ribbon" id="menuCreateBranch" style="color: #ffffff;">Создать ветку</button>
             <button class="btn-ribbon" id="Add_list_object" style="color: #ffffff;">▶ Расчет</button>
             <button class="btn-ribbon" id="Check_3D" style="color: #09bd36;">ПроCHECKовочка</button>
+
+            <button class="btn-ribbon" id="menuExportJSON" style="color: #ffffff;">💾 Экспорт JSON</button>
             
             <!-- <button class="btn-ribbon" id="menuDuplicateBranch">Копировать...</button>
             <button class="btn-ribbon" id="menuDuplicateBranch">Копировать ветку...</button> -->
@@ -105,6 +107,7 @@
             <button class="btn-ribbon" id="menuToggleCameraMode">Перспектива/Орто</button>
             <button class="btn-ribbon" id="menuToggleConnectionPoints">Узлы: Вкл/Выкл</button>
             <button class="btn-ribbon" id="menuToggleDiameters">Диаметры: Вкл/Выкл</button>
+            <!-- <button class="btn-ribbon" id="menuToggleTree" style="color: #ffffff; display: none;">📁 Дерево</button> -->
           </div>
           <div class="ribbon-title">Вид</div>
         </div>
@@ -116,15 +119,19 @@
     <div class="project-name" id="projectNameDisplay">Нет проекта</div>
     <div class="project-path" id="projectPathDisplay"></div>
   </div>
-  <div id="treePanel">
-    <div class="panel-header"><span>Дерево</span><span class="count" id="objectCount">0</span></div>
-    <div id="treeContainer">
-      <div class="tree-empty">Сцена пуста.<br>Используйте меню для добавления объектов.</div>
-    </div>
+  <!-- Кнопка + заголовок дерева -->
+  <div id="treeHeaderWrapper" class="tree-header-wrapper">
+    <button id="floatingTreeBtn" class="floating-tree-btn" title="Дерево построения">📁</button>
+    <span id="treeTitle" class="tree-title-text">Дерево построения</span>
+  </div>
+
+  <!-- Само дерево (прозрачное) -->
+  <div id="treePanel" class="tree-panel hidden">
+    <div id="treeContainer"></div>
   </div>
   <div id="ui">
-    <input type="number" id="planeWidth" value="50" min="2" max="200">
-    <input type="number" id="planeDepth" value="50" min="2" max="200">
+    <input type="number" id="planeWidth" value="50" min="2" max="2000">
+    <input type="number" id="planeDepth" value="50" min="2" max="2000">
     <input type="number" id="axesSizeInput" value="2" min="0.1" max="50" step="0.1">
   </div>
 
@@ -236,10 +243,10 @@
       <h3>Настройки сцены...</h3>
       <div class="modal-section">
         <h4>Основание, м</h4>
-        <div class="modal-row"><label>Ширина X:</label><input type="number" id="scenePlaneWidth" value="50" min="2"
-            max="200" step="1"></div>
+        <div class="modal-row"><label>Ширина X:</label><input type="number" id="scenePlaneWidth" value="100" min="2"
+            max="2000" step="1"></div>
         <div class="modal-row"><label>Глубина Z:</label><input type="number" id="scenePlaneDepth" value="50" min="2"
-            max="200" step="1"></div>
+            max="2000" step="1"></div>
       </div>
       <div class="modal-section">
         <h4>Размер осей, м</h4>
@@ -731,7 +738,7 @@
   <script src="charts.js"></script>
   
   <script>
-
+ 
   // import { User } from './modules/user.js'
   // const user1 = new User('Алексей', 25);
   // alert(user1.age);
@@ -813,7 +820,10 @@
       <button class="btn-cancel" id="closeChartFooterBtn">Закрыть</button>
     </div>
   </div>
-
+  <!-- Плавающая кнопка дерева -->
+  <button id="floatingTreeBtn" class="floating-tree-btn" title="Дерево построения">
+    📁
+  </button>
 
 </body>
 

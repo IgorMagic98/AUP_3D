@@ -1,0 +1,140 @@
+<!-- ============================================================================
+     draw-pipe.html
+     Модальное окно построения трубопровода в стиле профессионального ПО
+     ============================================================================ -->
+
+<div id="drawPipeModal" class="draw-pipe-modal">
+  <div class="draw-pipe-dialog">
+    <!-- Заголовок -->
+    <div class="dialog-header">
+      <span class="dialog-title">Draw Pipe</span>
+      <button class="dialog-close" id="drawPipeClose">&times;</button>
+    </div>
+
+    <div class="dialog-body">
+      <div class="dialog-layout">
+        <!-- ЛЕВАЯ КОЛОНКА: Параметры трубы -->
+        <div class="left-column">
+          <!-- Start Node -->
+          <div class="field-group">
+            <label class="field-label">Start Node *</label>
+            <select id="dpStartNode" class="field-select">
+              <option value="">-- Выберите узел --</option>
+            </select>
+          </div>
+
+          <!-- Length -->
+          <div class="field-group">
+            <label class="field-label">Length (м) *</label>
+            <input type="number" id="dpLength" class="field-input" value="5" step="0.1" min="0.1" max="100">
+          </div>
+
+          <!-- Pipe Type -->
+          <div class="field-group">
+            <label class="field-label">Pipe Type *</label>
+            <select id="dpPipeType" class="field-select">
+              <option value="feed_main">Feed main</option>
+              <option value="branch_line">Branch line</option>
+              <option value="cross_main">Cross main</option>
+              <option value="riser">Riser</option>
+            </select>
+          </div>
+
+          <!-- Pipe Code -->
+          <div class="field-group">
+            <label class="field-label">Pipe Code *</label>
+            <select id="dpPipeCode" class="field-select">
+              <option value="steel_10_blk">Steel 10 Blk</option>
+              <option value="steel_sch40">Steel Sch 40</option>
+              <option value="copper_type_l">Copper Type L</option>
+              <option value="cpvc_sch80">CPVC Sch 80</option>
+            </select>
+          </div>
+
+          <!-- Size -->
+          <div class="field-group">
+            <label class="field-label">Size (мм) *</label>
+            <select id="dpSize" class="field-select">
+              <option value="15">15</option>
+              <option value="20">20</option>
+              <option value="25">25</option>
+              <option value="32">32</option>
+              <option value="40">40</option>
+              <option value="50" selected>50</option>
+              <option value="65">65</option>
+              <option value="80">80</option>
+              <option value="100">100</option>
+              <option value="125">125</option>
+              <option value="150">150</option>
+              <option value="200">200</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ПРАВАЯ КОЛОНКА: Направления -->
+        <div class="right-column">
+          <!-- In Absolute Frame -->
+          <div class="direction-section">
+            <h4 class="section-title">In Absolute Frame</h4>
+            <div class="direction-buttons">
+              <button class="dir-btn" data-dir="+x">+X</button>
+              <button class="dir-btn" data-dir="-x">−X</button>
+              <button class="dir-btn active" data-dir="+y">+Y</button>
+              <button class="dir-btn" data-dir="-y">−Y</button>
+              <button class="dir-btn" data-dir="+z">+Z</button>
+              <button class="dir-btn" data-dir="-z">−Z</button>
+            </div>
+          </div>
+
+          <!-- In Relative Frame -->
+          <div class="direction-section">
+            <h4 class="section-title">In Relative Frame</h4>
+            
+            <div class="relative-fields">
+              <div class="field-row">
+                <label class="field-label-sm">Axis</label>
+                <select id="dpRelAxis" class="field-select-sm">
+                  <option value="absolute">Absolute</option>
+                  <option value="relative">Relative</option>
+                </select>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label-sm">Outlet Angle</label>
+                <select id="dpOutletAngle" class="field-select-sm">
+                  <option value="0">0°</option>
+                  <option value="45">45°</option>
+                  <option value="90" selected>90°</option>
+                  <option value="135">135°</option>
+                  <option value="180">180°</option>
+                </select>
+              </div>
+
+              <div class="field-row">
+                <label class="field-label-sm">Rotation</label>
+                <input type="number" id="dpRotation" class="field-input-sm" value="0" step="15" min="-360" max="360">
+              </div>
+
+              <div class="field-row checkbox-row">
+                <input type="checkbox" id="dpConstrain" checked>
+                <label for="dpConstrain">Constrain directions</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Футер с кнопками -->
+    <div class="dialog-footer">
+      <div class="footer-left">
+        <button class="btn-icon" id="dpUndo" title="Отменить"></button>
+        <button class="btn-icon" id="dpRedo" title="Повторить">↷</button>
+      </div>
+      <div class="footer-right">
+        <button class="btn-secondary" id="dpCancel">Cancel</button>
+        <button class="btn-primary" id="dpCreate">Create Pipe</button>
+      </div>
+    </div>
+  </div>
+</div>

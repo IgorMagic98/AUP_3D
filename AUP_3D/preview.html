@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Предпросмотр сети АУП</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #1e1e1e;
+      color: #fff;
+      overflow: hidden;
+    }
+    
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+    
+    canvas { display: block; width: 100%; height: 100%; }
+    
+    /* Верхняя панель управления */
+    .top-bar {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      align-items: center; /* Выравнивание по центру по вертикали */
+      gap: 10px;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .top-bar > * { pointer-events: auto; }
+    
+    .panel {
+      background: rgba(15, 19, 121, 0.95);
+      border-radius: 8px;
+      padding: 12px 16px;
+      backdrop-filter: blur(10px);
+      display: flex;
+      gap: 10px;
+    }
+    
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .btn:hover { background: rgba(255, 255, 255, 0.25); }
+    .btn-success { background: #2a7a3e; border-color: #2a7a3e; }
+    .btn-success:hover { background: #1e5c2e; }
+    
+    /* ✅ КНОПКА ДЕРЕВА — ОТДЕЛЬНО ОТ ПАНЕЛИ */
+    .btn-tree {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: none;
+      background: rgba(15, 19, 121, 0.95);
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 20px;
+      display: none; /* Скрыта по умолчанию, пока не загружен файл */
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+    }
+    .btn-tree.visible { display: flex; }
+    .btn-tree:hover { 
+      background: rgba(25, 118, 210, 0.95);
+      transform: translateY(-2px);
+    }
+    .btn-tree.active { 
+      background: rgba(25, 118, 210, 0.95);
+      box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.4);
+    }
+    
+    /* Зона загрузки */
+    .drop-zone {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px;
+      padding: 40px;
+      background: rgba(15, 19, 121, 0.9);
+      border: 2px dashed rgba(255, 255, 255, 0.4);
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      z-index: 200;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #1976d2;
+      background: rgba(25, 118, 210, 0.2);
+    }
+    .drop-zone.hidden { display: none; }
+    .drop-zone-icon { font-size: 48px; margin-bottom: 16px; }
+    .drop-zone-text { font-size: 16px; margin-bottom: 8px; }
+    .drop-zone-hint { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
+    
+    /* ===================================================================
+       ДЕРЕВО ПОСТРОЕНИЯ — БЕЗ ФОНА, БЕЗ ШАПКИ, СКРОЛЛ СЛЕВА
+       =================================================================== */
+    .tree-panel {
+      position: absolute;
+      top: 70px;
+      left: 10px;
+      width: 320px;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+      z-index: 100;
+      background: transparent !important;
+      direction: rtl; /* Переносит скроллбар влево */
+    }
+    .tree-panel.hidden { display: none; }
+    
+    #treeContainer {
+      background: transparent;
+      padding: 0;
+      direction: ltr; /* Возвращает нормальное направление текста */
+    }
+    
+    /* Стили дерева */
+    .tree-root { 
+      list-style: none; 
+      padding: 0; 
+      margin: 0; 
+    }
+    
+    .tree-group { margin: 2px 0; }
+    
+    .tree-group-header {
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+      background: transparent !important;
+      border-radius: 4px;
+      margin: 1px 4px;
+    }
+    .tree-group-header:hover {
+      background: rgba(0, 0, 0, 0.05) !important;
+    }
+    
+    .tree-toggle {
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 8px;
+      font-size: 10px;
+      color: #333;
+      transition: transform 0.2s;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+    }
+    .tree-toggle.collapsed { transform: rotate(-90deg); }
+    .tree-toggle::before { content: '▼'; font-size: 8px; }
+    .tree-toggle.expanded::before { content: '▼'; }
+    .tree-toggle.collapsed::before { content: '▶'; }
+    
+    .tree-group-icon {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      margin-right: 8px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .tree-group-icon.source { background: #800080; }
+    .tree-group-icon.node { background: #00ff00; }
+    .tree-group-icon.sprinkler { background: #ff0000; }
+    .tree-group-icon.edge { background: #0F1379; }
+    
+    .tree-group-name {
+      flex: 1;
+      font-weight: 600;
+      font-size: 13px;
+      color: #1a1a1a;
+    }
+    
+    .tree-list {
+      list-style: none;
+      padding-left: 28px;
+      margin: 0;
+    }
+    .tree-list.hidden { display: none; }
+    
+    .tree-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 10px 6px 32px;
+      cursor: pointer;
+      transition: background 0.15s;
+      background: transparent !important;
+      border-radius: 4px;
+      margin: 1px 4px;
+    }
+    .tree-item:hover { background: rgba(0, 0, 0, 0.05) !important; }
+    .tree-item.selected {
+      background: rgba(25, 118, 210, 0.2) !important;
+      border-left: 3px solid #1976d2;
+      padding-left: 29px;
+    }
+    
+    .tree-item-icon {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .tree-item-icon.source { background: #800080; }
+    .tree-item-icon.node { background: #00ff00; }
+    .tree-item-icon.sprinkler { background: #ff0000; }
+    .tree-item-icon.edge { background: #0F1379; }
+    
+    .tree-item-name {
+      flex: 1;
+      font-size: 12px;
+      color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    /* Легенда */
+    .legend {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      z-index: 100;
+    }
+    .legend.hidden { display: none; }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      font-size: 12px;
+      color: #fff;
+    }
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Загрузка и уведомления */
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 300;
+    }
+    .loading.hidden { display: none; }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #1976d2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .notification {
+      position: absolute;
+      top: 70px;
+      right: 10px;
+      padding: 12px 20px;
+      background: rgba(0, 0, 0, 0.85);
+      border-radius: 6px;
+      font-size: 13px;
+      z-index: 400;
+      animation: slideIn 0.3s ease;
+      color: #fff;
+    }
+    .notification.hidden { display: none; }
+    .notification.success { border-left: 4px solid #4caf50; }
+    .notification.error { border-left: 4px solid #f44336; }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    /* ✅ ТОНКИЙ СКРОЛЛБАР СЛЕВА */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { 
+      background: rgba(0, 0, 0, 0.2); 
+      border-radius: 2px; 
+    }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar:hover { width: 6px; }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <canvas id="previewCanvas"></canvas>
+    
+    <div id="dropZone" class="drop-zone">
+      <div class="drop-zone-icon">📂</div>
+      <div class="drop-zone-text">Перетащите JSON-файл сюда</div>
+      <div class="drop-zone-hint">или нажмите для выбора файла</div>
+      <input type="file" id="fileInput" accept=".json" style="display: none;">
+    </div>
+    
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+      <div>Загрузка и обработка данных...</div>
+    </div>
+    
+    <div id="notification" class="notification hidden"></div>
+    
+    <div class="top-bar">
+      <div class="panel">
+        <button class="btn" id="btnLoadFile">📂 Загрузить</button>
+        <button class="btn" id="btnResetView">🎯 Сброс вида</button>
+        <button class="btn" id="btnToggleLabels">🏷️ Метки: Вкл</button>
+        <button class="btn" id="btnToggleArrows">➡️ Стрелки: Вкл</button>
+        <button class="btn" id="btnExportImage">📸 PNG</button>
+        <button class="btn btn-success" id="btnExportJSON">💾 JSON</button>
+      </div>
+      <!-- ✅ ОТДЕЛЬНАЯ КНОПКА ДЕРЕВА С ИКОНКОЙ ПАПКИ -->
+      <button class="btn-tree" id="btnToggleTree" title="Дерево построения">📁</button>
+    </div>
+    
+    <!-- Дерево построения — БЕЗ ШАПКИ, ТОЛЬКО КОНТЕЙНЕР -->
+    <div id="treePanel" class="tree-panel hidden">
+      <div id="treeContainer"></div>
+    </div>
+    
+    <div class="panel legend hidden" id="legend">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px">Легенда</div>
+      <div class="legend-item"><div class="legend-color" style="background: #800080;"></div><span>Источник</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #00ff00;"></div><span>Узел</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #ff0000;"></div><span>Ороситель</span></div>
+      <div class="legend-item"><div class="legend-color" style="background: #0F1379; border-radius: 2px;"></div><span>Трубопровод</span></div>
+    </div>
+  </div>
+
+  <script>
+    class PreviewApp {
+      constructor() {
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.controls = null;
+        this.labelsVisible = true;
+        this.arrowsVisible = true;
+        this.networkData = null;
+        this.resultsData = null;
+        this.treeVisible = false;
+        
+        this.init();
+        this.bindEvents();
+        this.animate();
+      }
+      
+      // ✅ ОЧИСТКА КЛЮЧЕЙ ОТ ПРОБЕЛОВ (решает проблему вашего JSON)
+      cleanKeys(obj) {
+        if (obj === null || typeof obj !== 'object') return obj;
+        if (Array.isArray(obj)) return obj.map(item => this.cleanKeys(item));
+        const cleaned = {};
+        for (const key in obj) {
+          const cleanKey = key.trim();
+          cleaned[cleanKey] = this.cleanKeys(obj[key]);
+        }
+        return cleaned;
+      }
+      
+      init() {
+        const canvas = document.getElementById('previewCanvas');
+        const container = document.getElementById('canvas-container');
+        
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0xf5f5f5);
+        
+        this.camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 10000);
+        this.camera.position.set(20, 25, 30);
+        
+        this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+        this.renderer.setSize(container.clientWidth, container.clientHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        
+        this.controls = new THREE.OrbitControls(this.camera, canvas);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+        this.controls.target.set(0, 5, 0);
+        
+        this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 20, 10);
+        this.scene.add(dirLight);
+        
+        this.scene.add(new THREE.GridHelper(50, 50, 0xcccccc, 0xe0e0e0));
+        this.scene.add(new THREE.AxesHelper(2));
+      }
+      
+      bindEvents() {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+          if (e.target.files.length > 0) this.loadFile(e.target.files[0]);
+        });
+        
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('dragover');
+          if (e.dataTransfer.files.length > 0) this.loadFile(e.dataTransfer.files[0]);
+        });
+        
+        document.getElementById('btnLoadFile').addEventListener('click', () => fileInput.click());
+        document.getElementById('btnResetView').addEventListener('click', () => this.resetView());
+        document.getElementById('btnToggleLabels').addEventListener('click', (e) => {
+          this.labelsVisible = !this.labelsVisible;
+          e.target.textContent = `🏷️ Метки: ${this.labelsVisible ? 'Вкл' : 'Выкл'}`;
+          this.updateLabelsVisibility();
+        });
+        document.getElementById('btnToggleArrows').addEventListener('click', (e) => {
+          this.arrowsVisible = !this.arrowsVisible;
+          e.target.textContent = `➡️ Стрелки: ${this.arrowsVisible ? 'Вкл' : 'Выкл'}`;
+          this.updateArrowsVisibility();
+        });
+        document.getElementById('btnExportImage').addEventListener('click', () => this.exportImage());
+        document.getElementById('btnExportJSON').addEventListener('click', () => this.exportToJSON());
+        
+        // ✅ ОБРАБОТЧИК КНОПКИ ДЕРЕВА
+        document.getElementById('btnToggleTree').addEventListener('click', () => {
+          this.toggleTree();
+        });
+        
+        window.addEventListener('resize', () => {
+          const container = document.getElementById('canvas-container');
+          this.camera.aspect = container.clientWidth / container.clientHeight;
+          this.camera.updateProjectionMatrix();
+          this.renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+      }
+      
+      toggleTree() {
+        const treePanel = document.getElementById('treePanel');
+        const btn = document.getElementById('btnToggleTree');
+        
+        this.treeVisible = !this.treeVisible;
+        
+        if (this.treeVisible) {
+          treePanel.classList.remove('hidden');
+          btn.classList.add('active');
+        } else {
+          treePanel.classList.add('hidden');
+          btn.classList.remove('active');
+        }
+      }
+      
+      loadFile(file) {
+        document.getElementById('loading').classList.remove('hidden');
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const raw = JSON.parse(e.target.result);
+            const data = this.cleanKeys(raw); // ✅ Очистка пробелов в ключах
+            this.processData(data);
+            document.getElementById('loading').classList.add('hidden');
+            this.showNotification('Файл успешно загружен', 'success');
+          } catch (error) {
+            document.getElementById('loading').classList.add('hidden');
+            this.showNotification('Ошибка загрузки: ' + error.message, 'error');
+            console.error(error);
+          }
+        };
+        reader.readAsText(file);
+      }
+      
+      processData(data) {
+        this.clearScene();
+        this.networkData = data;
+        
+        if (data.nodes && data.edges) {
+          this.resultsData = data;
+          this.renderResults(data);
+        } else if (data.Node && data.Edge) {
+          this.renderNetwork(data);
+        }
+        
+        document.getElementById('dropZone').classList.add('hidden');
+        document.getElementById('legend').classList.remove('hidden');
+        
+        // Показываем кнопку дерева и открываем его
+        document.getElementById('btnToggleTree').classList.add('visible');
+        if (!this.treeVisible) {
+          this.toggleTree();
+        }
+        
+        this.buildTree();
+      }
+      
+      renderNetwork(data) {
+        (data.Node || []).forEach(node => this.createNode(node));
+        (data.Edge || []).forEach(edge => this.createEdge(edge, data.Node || []));
+      }
+      
+      renderResults(data) {
+        Object.entries(data.nodes || {}).forEach(([uuid, nodeData]) => this.createNodeWithResults(uuid, nodeData));
+        Object.entries(data.edges || {}).forEach(([uuid, edgeData]) => this.createEdgeWithResults(uuid, edgeData));
+      }
+      
+      createNode(node) {
+        const x = parseFloat(node.X_gl || node.x || 0);
+        const y = parseFloat(node.Y_gl || node.y || 0);
+        const z = parseFloat(node.Z_gl || node.z || 0);
+        const type = (node.type || '').toLowerCase();
+        
+        let color = 0x00ff00, radius = 0.1;
+        if (type === 'source') { color = 0x800080; radius = 0.15; }
+        else if (type === 'sprinkler') { color = 0xff0000; radius = 0.08; }
+        
+        const mesh = new THREE.Mesh(
+          new THREE.SphereGeometry(radius, 32, 32),
+          new THREE.MeshBasicMaterial({ color })
+        );
+        mesh.position.set(x, y, z);
+        mesh.userData = { type: 'node', id: node.id, nodeData: node };
+        this.scene.add(mesh);
+      }
+      
+      createNodeWithResults(uuid, nodeData) {
+        const orig = this.findNodeByUuid(uuid);
+        if (!orig) return;
+        
+        const x = parseFloat(orig.X_gl || orig.x || 0);
+        const y = parseFloat(orig.Y_gl || orig.y || 0);
+        const z = parseFloat(orig.Z_gl || orig.z || 0);
+        const type = (nodeData.type || '').toLowerCase();
+        
+        let color = 0x00ff00, radius = 0.1;
+        if (type === 'source') { color = 0x800080; radius = 0.15; }
+        else if (type === 'sprinkler') { color = 0xff0000; radius = 0.08; }
+        
+        const mesh = new THREE.Mesh(
+          new THREE.SphereGeometry(radius, 32, 32),
+          new THREE.MeshBasicMaterial({ color })
+        );
+        mesh.position.set(x, y, z);
+        mesh.userData = { type: 'node', uuid, nodeData };
+        this.scene.add(mesh);
+        
+        if (nodeData.pressure_m !== undefined) {
+          this.createLabel(`P = ${nodeData.pressure_m.toFixed(2)} м`, new THREE.Vector3(x, y + 0.3, z), '#000000');
+        }
+        if (type === 'sprinkler' && nodeData.sprinkler_flow_l_s !== undefined) {
+          this.createLabel(`Q = ${nodeData.sprinkler_flow_l_s.toFixed(2)} л/с`, new THREE.Vector3(x, y - 0.3, z), '#ff0000');
+        }
+      }
+      
+      createEdge(edge, nodes) {
+        const startNode = nodes.find(n => n.id === edge.start_node);
+        const endNode = nodes.find(n => n.id === edge.end_node);
+        if (!startNode || !endNode) return;
+        
+        const start = new THREE.Vector3(
+          parseFloat(startNode.X_gl||startNode.x||0),
+          parseFloat(startNode.Y_gl||startNode.y||0),
+          parseFloat(startNode.Z_gl||startNode.z||0)
+        );
+        const end = new THREE.Vector3(
+          parseFloat(endNode.X_gl||endNode.x||0),
+          parseFloat(endNode.Y_gl||endNode.y||0),
+          parseFloat(endNode.Z_gl||endNode.z||0)
+        );
+        
+        const mesh = new THREE.Mesh(
+          new THREE.TubeGeometry(
+            new THREE.LineCurve3(start, end),
+            32,
+            (parseFloat(edge.DN || 50) / 2 / 1000),
+            12, false
+          ),
+          new THREE.MeshBasicMaterial({ color: 0x0F1379 })
+        );
+        mesh.userData = { type: 'edge', id: edge.id, edgeData: edge };
+        this.scene.add(mesh);
+      }
+      
+      createEdgeWithResults(uuid, edgeData) {
+        const orig = this.findEdgeByUuid(uuid);
+        if (!orig) return;
+        
+        const startNode = this.findNodeByUuid(orig.start_node);
+        const endNode = this.findNodeByUuid(orig.end_node);
+        if (!startNode || !endNode) return;
+        
+        const start = new THREE.Vector3(
+          parseFloat(startNode.X_gl||startNode.x||0),
+          parseFloat(startNode.Y_gl||startNode.y||0),
+          parseFloat(startNode.Z_gl||startNode.z||0)
+        );
+        const end = new THREE.Vector3(
+          parseFloat(endNode.X_gl||endNode.x||0),
+          parseFloat(endNode.Y_gl||endNode.y||0),
+          parseFloat(endNode.Z_gl||endNode.z||0)
+        );
+        
+        const mesh = new THREE.Mesh(
+          new THREE.TubeGeometry(
+            new THREE.LineCurve3(start, end),
+            32,
+            (parseFloat(orig.DN || 50) / 2 / 1000),
+            12, false
+          ),
+          new THREE.MeshBasicMaterial({ color: 0x0F1379 })
+        );
+        mesh.userData = { type: 'edge', uuid, edgeData };
+        this.scene.add(mesh);
+        
+        if (edgeData.flow_l_s !== undefined) {
+          const mid = new THREE.Vector3().lerpVectors(start, end, 0.5);
+          this.createLabel(`Q = ${Math.abs(edgeData.flow_l_s).toFixed(3)} л/с`, mid, '#00ff37', 0.2);
+        }
+        if (edgeData.direction) {
+          this.createFlowArrow(start, end, edgeData.direction === 'reverse');
+        }
+      }
+      
+      createLabel(text, position, color = '#000000', yOffset = 0) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const fontSize = 32;
+        ctx.font = `Bold ${fontSize}px Arial, sans-serif`;
+        canvas.width = Math.ceil(ctx.measureText(text).width + 40);
+        canvas.height = fontSize + 40;
+        
+        ctx.font = `Bold ${fontSize}px Arial, sans-serif`;
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: new THREE.CanvasTexture(canvas),
+          transparent: true,
+          depthTest: false
+        }));
+        sprite.position.copy(position);
+        sprite.position.y += yOffset;
+        sprite.scale.set(2, 2, 1);
+        sprite.userData = { type: 'label' };
+        this.scene.add(sprite);
+      }
+      
+      createFlowArrow(start, end, isReverse) {
+        const from = isReverse ? end.clone() : start.clone();
+        const to = isReverse ? start.clone() : end.clone();
+        const direction = new THREE.Vector3().subVectors(to, from).normalize();
+        const mid = new THREE.Vector3().lerpVectors(start, end, 0.5);
+        const pipeLength = start.distanceTo(end);
+        const coneHeight = Math.min(pipeLength * 0.15, 0.8);
+        const coneRadius = coneHeight * 0.5;
+        
+        const cone = new THREE.Mesh(
+          new THREE.ConeGeometry(coneRadius, coneHeight, 32),
+          new THREE.MeshBasicMaterial({ color: 0x00ff37, transparent: true, opacity: 0.85 })
+        );
+        cone.position.copy(mid);
+        cone.setRotationFromQuaternion(
+          new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction)
+        );
+        cone.userData = { type: 'arrow' };
+        this.scene.add(cone);
+      }
+      
+      clearScene() {
+        const toRemove = [];
+        this.scene.traverse((child) => {
+          if (child.userData && ['node', 'edge', 'label', 'arrow'].includes(child.userData.type)) {
+            toRemove.push(child);
+          }
+        });
+        toRemove.forEach(child => {
+          this.scene.remove(child);
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) {
+            if (child.material.map) child.material.map.dispose();
+            child.material.dispose();
+          }
+        });
+      }
+      
+      buildTree() {
+        const container = document.getElementById('treeContainer');
+        container.innerHTML = '';
+        const rootUl = document.createElement('ul');
+        rootUl.className = 'tree-root';
+
+        const isResults = this.networkData.nodes && this.networkData.edges;
+        let sources = [], nodes = [], sprinklers = [], edges = [];
+
+        if (isResults) {
+          for (const [uuid, data] of Object.entries(this.networkData.nodes)) {
+            const type = (data.type || 'node').toLowerCase();
+            const item = { uuid, ...data, name: `${type}_${uuid.slice(0, 4)}` };
+            if (type === 'source') sources.push(item);
+            else if (type === 'sprinkler') sprinklers.push(item);
+            else nodes.push(item);
+          }
+          for (const [uuid, data] of Object.entries(this.networkData.edges)) {
+            edges.push({ uuid, ...data, name: `Труба_${uuid.slice(0, 4)}` });
+          }
+        } else {
+          const rawNodes = this.networkData.Node || [];
+          const rawEdges = this.networkData.Edge || [];
+          sources = rawNodes.filter(n => (n.type||'').toLowerCase() === 'source')
+                            .map((n, i) => ({...n, name: `Источник ${i+1}`}));
+          nodes = rawNodes.filter(n => (n.type||'').toLowerCase() === 'node')
+                          .map((n, i) => ({...n, name: `Узел ${i+1}`}));
+          sprinklers = rawNodes.filter(n => (n.type||'').toLowerCase() === 'sprinkler')
+                               .map((n, i) => ({...n, name: `Ороситель ${i+1}`}));
+          edges = rawEdges.map((e, i) => ({
+            ...e,
+            name: `Труба ${i+1} (DN${e.DN}, ${e.Length}м)`
+          }));
+        }
+
+        const createGroup = (title, type, items) => {
+          if (items.length === 0) return null;
+          const groupLi = document.createElement('li');
+          groupLi.className = 'tree-group';
+
+          const header = document.createElement('div');
+          header.className = 'tree-group-header';
+          
+          // ✅ КОЛИЧЕСТВО ПРЯМО В НАЗВАНИИ: "Источники [1]"
+          header.innerHTML = `
+            <span class="tree-toggle expanded"></span>
+            <span class="tree-group-icon ${type}"></span>
+            <span class="tree-group-name">${title} [${items.length}]</span>
+          `;
+
+          const childUl = document.createElement('ul');
+          childUl.className = 'tree-list';
+
+          items.forEach(item => {
+            const itemLi = document.createElement('li');
+            itemLi.className = 'tree-item';
+
+            itemLi.innerHTML = `
+              <span class="tree-item-icon ${type}"></span>
+              <span class="tree-item-name" title="${item.name}">${item.name}</span>
+            `;
+            
+            itemLi.addEventListener('click', (e) => {
+              e.stopPropagation();
+              container.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
+              itemLi.classList.add('selected');
+              this.focusOnItem(item);
+            });
+            childUl.appendChild(itemLi);
+          });
+
+          header.addEventListener('click', () => {
+            const toggle = header.querySelector('.tree-toggle');
+            toggle.classList.toggle('expanded');
+            toggle.classList.toggle('collapsed');
+            childUl.classList.toggle('hidden');
+          });
+
+          groupLi.appendChild(header);
+          groupLi.appendChild(childUl);
+          return groupLi;
+        };
+
+        [createGroup('Источники', 'source', sources),
+         createGroup('Узлы', 'node', nodes),
+         createGroup('Оросители', 'sprinkler', sprinklers),
+         createGroup('Трубопроводы', 'edge', edges)
+        ].forEach(g => { if (g) rootUl.appendChild(g); });
+
+        container.appendChild(rootUl);
+      }
+
+      toggleAllGroups(collapse) {
+        document.querySelectorAll('.tree-toggle').forEach(t => {
+          t.classList.toggle('collapsed', collapse);
+          t.classList.toggle('expanded', !collapse);
+        });
+        document.querySelectorAll('.tree-list').forEach(l => l.classList.toggle('hidden', collapse));
+      }
+
+      focusOnItem(item) {
+        const searchId = item.uuid || item.id;
+        let target = null;
+        this.scene.traverse((child) => {
+          if (child.userData && (
+            child.userData.uuid === searchId ||
+            child.userData.id === searchId ||
+            child.userData.nodeData?.id === searchId ||
+            child.userData.edgeData?.id === searchId
+          )) {
+            target = child;
+          }
+        });
+
+        if (target) {
+          const pos = new THREE.Vector3();
+          target.getWorldPosition(pos);
+          this.camera.position.set(pos.x + 5, pos.y + 5, pos.z + 5);
+          this.controls.target.copy(pos);
+          this.controls.update();
+        }
+      }
+
+      updateLabelsVisibility() {
+        this.scene.traverse((child) => {
+          if (child.userData && child.userData.type === 'label') child.visible = this.labelsVisible;
+        });
+      }
+      
+      updateArrowsVisibility() {
+        this.scene.traverse((child) => {
+          if (child.userData && child.userData.type === 'arrow') child.visible = this.arrowsVisible;
+        });
+      }
+      
+      resetView() {
+        this.camera.position.set(20, 25, 30);
+        this.controls.target.set(0, 5, 0);
+        this.controls.update();
+      }
+      
+      exportImage() {
+        this.renderer.render(this.scene, this.camera);
+        const link = document.createElement('a');
+        link.download = 'preview_' + Date.now() + '.png';
+        link.href = this.renderer.domElement.toDataURL('image/png');
+        link.click();
+      }
+      
+      exportToJSON() {
+        if (!this.networkData) {
+          this.showNotification('Нет данных для экспорта', 'error');
+          return;
+        }
+        const blob = new Blob([JSON.stringify(this.networkData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `network_export_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        this.showNotification('Файл успешно сохранён', 'success');
+      }
+      
+      findNodeByUuid(uuid) {
+        if (!this.networkData) return null;
+        if (this.networkData.Node) return this.networkData.Node.find(n => String(n.id) === uuid);
+        return this.networkData.nodes?.[uuid] ? { id: uuid, ...this.networkData.nodes[uuid] } : null;
+      }
+      
+      findEdgeByUuid(uuid) {
+        if (!this.networkData) return null;
+        if (this.networkData.Edge) return this.networkData.Edge.find(e => String(e.id) === uuid);
+        return this.networkData.edges?.[uuid] ? { id: uuid, ...this.networkData.edges[uuid] } : null;
+      }
+      
+      showNotification(message, type = 'success') {
+        const el = document.getElementById('notification');
+        el.textContent = message;
+        el.className = `notification ${type}`;
+        setTimeout(() => el.classList.add('hidden'), 3000);
+      }
+      
+      animate() {
+        requestAnimationFrame(() => this.animate());
+        this.controls.update();
+        this.renderer.render(this.scene, this.camera);
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      window.previewApp = new PreviewApp();
+    });
+  </script>
+</body>
+</html>

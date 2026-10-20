@@ -11,7 +11,7 @@ async function getTubeTypes() {
   }
 
   const data = await response.json(); 
-  // console.log("datataaa",data);// читаем ровно один раз
+  console.log("datataaa",data);// читаем ровно один раз
   return data;                        // это и есть «возвращаемые данные», но внутри Promise
 }
 
