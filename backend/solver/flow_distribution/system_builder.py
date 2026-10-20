@@ -29,8 +29,8 @@ import jax.numpy as jnp
 jax.config.update("jax_enable_x64", True)
 
 # Значения по умолчанию
-DEFAULT_K_SPRINKLER = 0.56
-DEFAULT_PRESSURE_TARGET = 10.00
+DEFAULT_K_SPRINKLER = 0.35
+DEFAULT_PRESSURE_TARGET = 30.29
 
 
 # ============================================================================
@@ -411,6 +411,12 @@ class HydraulicSystemBuilder:
             # hf = Lambda * Q * |Q|
             # Q * |Q| сохраняет направление потока.
             hf = Lambda * Q * jnp.abs(Q)
+            
+            # ------------------------------------------------------------
+            # СТАТИЧЕСКИЙ НАПОР
+            # ------------------------------------------------------------
+            # hf = R.T * Hst            
+            hst = R.T @ Hst
 
             # ------------------------------------------------------------
             # УРАВНЕНИЯ ЭНЕРГИИ
@@ -422,7 +428,7 @@ class HydraulicSystemBuilder:
             #     (P_start + Hst_start)
             #     - (P_end + Hst_end)
             #     - hf = 0
-            energy = R.T @ (P + Hst) - hf
+            energy = R.T @ P - hf+ hst
 
             # ------------------------------------------------------------
             # УРАВНЕНИЯ ПОТРЕБИТЕЛЕЙ
