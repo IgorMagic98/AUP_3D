@@ -97,7 +97,7 @@ def run_calculation(builder):
     X0 = X0.at[core.qin_slice].set(Qin_init)
 
     # Начальные давления источников
-    P_sources_initial = jnp.full(core.n_in, 1000.0)
+    P_sources_initial = jnp.full(core.n_in, 100000.0)
 
     # =================================================================
     # ЭТАП 1: ПРОБНЫЙ РАСЧЁТ
@@ -135,7 +135,7 @@ def run_calculation(builder):
     if core.n_in == 1:
         P_low = 10.0
         P_high = 300.0
-        MAX_P = 100000.0
+        MAX_P = 1000000.0
 
         f_low = objective(P_low)
         f_high = objective(P_high)

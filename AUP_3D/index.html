@@ -49,6 +49,8 @@
             <button class="btn-ribbon" id="menuCreateBranch" style="color: #ffffff;">Создать ветку</button>
             <button class="btn-ribbon" id="Add_list_object" style="color: #ffffff;">▶ Расчет</button>
             <button class="btn-ribbon" id="Check_3D" style="color: #09bd36;">ПроCHECKовочка</button>
+
+            <button class="btn-ribbon" id="menuExportJSON" style="color: #ffffff;">💾 Экспорт JSON</button>
             
             <!-- <button class="btn-ribbon" id="menuDuplicateBranch">Копировать...</button>
             <button class="btn-ribbon" id="menuDuplicateBranch">Копировать ветку...</button> -->
@@ -105,6 +107,7 @@
             <button class="btn-ribbon" id="menuToggleCameraMode">Перспектива/Орто</button>
             <button class="btn-ribbon" id="menuToggleConnectionPoints">Узлы: Вкл/Выкл</button>
             <button class="btn-ribbon" id="menuToggleDiameters">Диаметры: Вкл/Выкл</button>
+            <!-- <button class="btn-ribbon" id="menuToggleTree" style="color: #ffffff; display: none;">📁 Дерево</button> -->
           </div>
           <div class="ribbon-title">Вид</div>
         </div>
@@ -116,15 +119,19 @@
     <div class="project-name" id="projectNameDisplay">Нет проекта</div>
     <div class="project-path" id="projectPathDisplay"></div>
   </div>
-  <div id="treePanel">
-    <div class="panel-header"><span>Дерево</span><span class="count" id="objectCount">0</span></div>
-    <div id="treeContainer">
-      <div class="tree-empty">Сцена пуста.<br>Используйте меню для добавления объектов.</div>
-    </div>
+  <!-- Кнопка + заголовок дерева -->
+  <div id="treeHeaderWrapper" class="tree-header-wrapper">
+    <button id="floatingTreeBtn" class="floating-tree-btn" title="Дерево построения">📁</button>
+    <span id="treeTitle" class="tree-title-text">Дерево построения</span>
+  </div>
+
+  <!-- Само дерево (прозрачное) -->
+  <div id="treePanel" class="tree-panel hidden">
+    <div id="treeContainer"></div>
   </div>
   <div id="ui">
-    <input type="number" id="planeWidth" value="50" min="2" max="200">
-    <input type="number" id="planeDepth" value="50" min="2" max="200">
+    <input type="number" id="planeWidth" value="50" min="2" max="2000">
+    <input type="number" id="planeDepth" value="50" min="2" max="2000">
     <input type="number" id="axesSizeInput" value="2" min="0.1" max="50" step="0.1">
   </div>
 
@@ -135,7 +142,6 @@
 <!-- ТЕСТ ДЯЛ СОЗДАНИЯ ПЕРЕМЕЩАЕМОГО ОКНА  -->
 
 <div id="move_window">
-
   <div id="pipelineBuilder">
     <div class="pipeline-header" id="pipelineDragHandle">
       <span class="title">Построение трубопровода</span>
@@ -144,9 +150,10 @@
     <div class="pipeline-body">
       <div class="step">
         <span>Координаты исходной точки:</span>
-        X<input type="number" id="pbCX" value="0" step="0.1">
-        Y<input type="number" id="pbCY" value="0" step="0.1">
-        Z<input type="number" id="pbCZ" value="0" step="0.1">
+        X<input type="number" id="pbCX" value="0" step="0.1" readonly>
+        <!-- <span>X:</span><span id="pbCX"></span> -->
+        Y<input type="number" id="pbCY" value="0" step="0.1" readonly>
+        Z<input type="number" id="pbCZ" value="0" step="0.1" readonly>
       </div>
       <div class="step">
         <span>Ось трубопровода</span>
@@ -186,7 +193,7 @@
       <div class="step">
         <button class="confirm" id="pbConfirm">Создать</button>
         <!-- <button class="finish" id="pbFinish">Готово</button> -->
-        <button class="cancel" id="pbCancel">Отмена</button>
+        <button class="cancel" id="pbCancel">Закрыть</button>
       </div>
       <!-- <div class="pipeline-stats">
         <div>Участков: <span id="pbSegmentCount">0</span></div>
@@ -197,13 +204,13 @@
   </div>
 </div>  
 
-  <div id="toolbar">
+  <!-- <div id="toolbar">
     <button id="resetViewBtn">Сброс вида</button>
     <button id="toggleGridBtn">Сетка: Вкл</button>
     <button id="topViewBtn">Вид сверху</button>
     <button id="toggleConnectionPointsBtn">Узлы: Вкл</button>
     <button id="toggleDiametersBtn">Диаметры: Вкл</button>
-  </div>
+  </div> -->
   <div id="newProjectModal" class="edit-modal">
     <div class="modal-content" style="width: 500px;">
       <h3>📁 Создание нового проекта</h3>
@@ -236,10 +243,10 @@
       <h3>Настройки сцены...</h3>
       <div class="modal-section">
         <h4>Основание, м</h4>
-        <div class="modal-row"><label>Ширина X:</label><input type="number" id="scenePlaneWidth" value="50" min="2"
-            max="200" step="1"></div>
+        <div class="modal-row"><label>Ширина X:</label><input type="number" id="scenePlaneWidth" value="100" min="2"
+            max="2000" step="1"></div>
         <div class="modal-row"><label>Глубина Z:</label><input type="number" id="scenePlaneDepth" value="50" min="2"
-            max="200" step="1"></div>
+            max="2000" step="1"></div>
       </div>
       <div class="modal-section">
         <h4>Размер осей, м</h4>
@@ -252,42 +259,7 @@
       </div>
     </div>
   </div>
-  <div id="createBranchModal" class="edit-modal">
-    <div class="modal-content">
-      <h3>Ветка</h3>
-      
-      <div class="modal-section">
-        <h4>Количество оросителей</h4>
-        <div class="spr-row">
-          <input type="number" id="createBranchSprCount" min="1" max="50" value="4">
-        </div>
-        <span>Направление оси трубопровода</span>
-        <button class="axis-btn " data-axis="x">X</button>
-        <button class="axis-btn active" data-axis="y">Y</button>
-        <button class="axis-btn" data-axis="z">Z</button>
-        <div class="step">
-        <span>Тип трубопровода</span>
-        <select id="get_tube_pipe_sprinkler">          
-        </select>                
-        </div>
-        <div class="step">
-          <span>Диаметр трубопровода DN</span>
-          <select id="pbDiameter_sprinkler">          
-          </select>
-        </div>
-      </div>
-      <!-- <div class="modal-section">
-        <h4>Участки</h4>
-        <div class="segment-header"><span>№</span><span>Длина, м</span><span>DN</span></div>
-        <div id="createBranchInputs"></div>
-        <div class="total-length">Общая: <span id="createBranchTotalLength">0.00</span> м</div>
-      </div> -->
-      <div class="modal-buttons">
-        <button class="btn-apply" id="createBranchApplyBtn">Создать</button>
-        <button class="btn-cancel" id="createBranchCancelBtn">Отмена</button>        
-      </div>
-    </div>
-  </div>
+  
   <div id="createRowModal" class="edit-modal">
     <div class="modal-content">
       <h3>Рядок</h3>
@@ -443,25 +415,112 @@
   </div>
 
 
-  <div id="PipelineModal_Edit" class="edit-modal">
-    <div class="modal-content">      
-      <h3>Трубопровод:<span id="number_pipe_edit"></span></h3>
-      <h3>Длина редактируемого трубопровода:<span id="Length_pipe_edit"></span></h3>
+  
+  
+  <div id="PipelineModal_Edit">
+    <div class="pipeline-header" id="pipelineDragHandle">
+      <span class="title">Редактирование трубопровода</span>
+      <!-- <span class="hint">⇲ перетащите</span> -->
+    </div>
+    <div class="pipeline-body"> 
       <div class="step">
-        <span>Введите длину:</span>
-        <input type="number" id="pipe_edit" value="1" min="1" step="1">
-        <!-- Y<input type="number" id="pbCY" value="0" step="0.1">
-        Z<input type="number" id="pbCZ" value="0" step="0.1"> -->
+        <span>Трубопровод:</span>
+        <span id="number_pipe_edit"></span>                
       </div>
-      <div class="modal-buttons">
+      <div class="step">
+        <span>Тип трубопровода:</span>
+        <span id="type_pipe_edit"></span>                
+      </div>
+      <div class="step">
+        <span>Диаметр трубопровода:</span>
+        <span id="DN_pipe_edit"></span>                
+      </div>
+      <div class="step">
+        <span>Длина редактируемого трубопровода:</span>
+        <span id="Length_pipe_edit">              
+      </div>            
+      <div class="step">
+        <span>Изменить тип трубопровода</span>
+        <select id="get_tube_pipe_edit"></select>                
+      </div>
+      <div class="step">
+          <span>Изменить диаметр трубопровода DN</span>
+          <select id="pbDiameter_edit"></select>
+      </div>
+      <div class="step">
+        <span>Изменить длину трубопровода</span>
+        <input type="number" id="pipe_edit" value="1" min="0.1" step="1" max="100">
+      </div>      
+      <div class="step">
         <button class="confirm" id="splitApplyBtn_Edit">Применить</button>        
-        <button class="cancel" id="splitCancelBtn_Edit">Отмена</button>
-        <!-- <button class="btn-cancel" id="splitCancelBtn">Отмена</button>
-        <button class="btn-apply" id="splitApplyBtn">Разбить</button> -->
-      </div>
+        <button class="cancel" id="splitCancelBtn_Edit">Отмена</button>        
+      </div>      
     </div>
   </div>
 
+  <div id="createBranchModal">
+    <div class="pipeline-header" id="pipelineDragHandle">
+      <span class="title">Создание ветки оросителей</span>
+      <!-- <span class="hint">⇲ перетащите</span> -->
+    </div>
+    <div class="pipeline-body">      
+      <div class="step">
+        <span>Координаты исходной точки:</span>
+        X<input type="number" id="pbCX_branch" value="0" step="0.1" readonly>
+        Y<input type="number" id="pbCY_branch" value="0" step="0.1" readonly>
+        Z<input type="number" id="pbCZ_branch" value="0" step="0.1" readonly>
+      </div>
+      <div class="step">
+        <span>Ось ветки</span>
+        <button class="axis-btn" data-axis="x">X</button>
+        <button class="axis-btn active" data-axis="y">Y</button>
+        <button class="axis-btn" data-axis="z">Z</button>
+        
+        <span style="margin-left:10px">Направление вдоль оси</span>
+        <button class="dir-btn active" data-dir="+">+</button>
+        <button class="dir-btn" data-dir="-">-</button>
+      </div>
+      
+      <div class="step">
+        <span>Ось поворота</span>
+        <button class="axis-btn-rot" data-axis="x">X</button>
+        <button class="axis-btn-rot active" data-axis="y">Y</button>
+        <button class="axis-btn-rot" data-axis="z">Z</button>
+        
+        <span style="margin-left:10px">Угол, град.</span>
+        <input type="number" id="pbAngle_branch" value="0" step="10" min="-360" max="360">
+      </div>
+      <div class="step">
+        <span>Тип трубопровода</span>
+        <select id="get_tube_pipe_sprinkler"></select>                
+      </div> 
+      <div class="step">
+        <span>Количество оросителей</span>
+        <input type="number" id="createBranchSprCount" min="1" max="50" value="1" step="1">
+      </div>
+      
+      <div id="myTabContent" style="background-color: #fff;"></div>
+      
+
+    
+      <div class="step">
+        <button class="confirm" id="createBranchApplyBtn">Применить</button>        
+        <button class="cancel" id="createBranchCancelBtn">Отмена</button> 
+        <!-- <button class="btn-apply" id="createBranchApplyBtn">Создать</button>
+        <button class="btn-cancel" id="createBranchCancelBtn">Отмена</button>         -->
+      </div>
+
+        <!-- <span>Направление оси трубопровода</span>
+        <button class="axis-btn " data-axis="x">X</button>
+        <button class="axis-btn active" data-axis="y">Y</button>
+        <button class="axis-btn" data-axis="z">Z</button>
+        
+        <div class="modal-buttons">
+        <button class="btn-apply" id="createBranchApplyBtn">Создать</button>
+        <button class="btn-cancel" id="createBranchCancelBtn">Отмена</button>        
+      </div> -->
+    </div>
+  </div>
 
   <div id="splitPipelineModal" class="edit-modal">
     <div class="modal-content">      
@@ -679,7 +738,7 @@
   <script src="charts.js"></script>
   
   <script>
-
+ 
   // import { User } from './modules/user.js'
   // const user1 = new User('Алексей', 25);
   // alert(user1.age);
@@ -761,7 +820,10 @@
       <button class="btn-cancel" id="closeChartFooterBtn">Закрыть</button>
     </div>
   </div>
-
+  <!-- Плавающая кнопка дерева -->
+  <button id="floatingTreeBtn" class="floating-tree-btn" title="Дерево построения">
+    📁
+  </button>
 
 </body>
 

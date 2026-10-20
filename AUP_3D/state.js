@@ -121,4 +121,4 @@ const Utils = {
         setTimeout(() => e.classList.remove('show'), d);
     }
 };
-let BINGO = "ЖasdadОПА";
+// let BINGO = "ЖasdadОПА";
