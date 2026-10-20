@@ -552,12 +552,12 @@ function create_branch(Node) {
         // ==========================================================
         const sprinklerGroup = new THREE.Group();
         sprinklerGroup.name = 'SprinklerArrow';
-
+        const nodeRadius = 2 * new_DN_tube / 1000; // 0.1
         // 1. Стержень стрелки (цилиндр)
         const shaftRadius = nodeRadius * 0.1; // Пропорционально размеру узла
         const shaftHeight = nodeRadius * 2.5;
         const shaftGeo = new THREE.CylinderGeometry(shaftRadius, shaftRadius, shaftHeight, 16);
-        const shaft = new THREE.Mesh(shaftGeo, Arrow_Material);
+        const shaft = new THREE.Mesh(shaftGeo, Node_Material);
         // Сдвигаем вниз, чтобы начало было примерно от центра/низа сферы
         shaft.position.y = -(shaftHeight / 2); 
         
@@ -565,7 +565,7 @@ function create_branch(Node) {
         const headRadius = nodeRadius * 1;
         const headHeight = nodeRadius * 1.5;
         const headGeo = new THREE.ConeGeometry(headRadius, headHeight, 16);
-        const head = new THREE.Mesh(headGeo, Arrow_Material);
+        const head = new THREE.Mesh(headGeo, Node_Material);
         head.rotation.x = Math.PI;
         head.position.y = -(shaftHeight + headHeight / 2);
 

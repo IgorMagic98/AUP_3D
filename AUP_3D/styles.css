@@ -932,6 +932,8 @@
       display: none;
     }
 
+    
+
     #loading .spinner {
       width: 40px;
       height: 40px;
@@ -1468,7 +1470,7 @@ body {
   width: 6px;
 }
 
-#pipelineBuilder {
+/* #pipelineBuilder {
   position: fixed;
   top: 25%;
   right: 20px;
@@ -1580,7 +1582,7 @@ body {
 #pipelineBuilder .cancel {
   background: #d32f2f;
   color: #fff;
-}
+} */
 
 #pipelineSegmentsList {
   max-height: 150px;

@@ -26,7 +26,7 @@ class UIApp {
     this.input = new InputHandler();
 
     this._bindRibbonButtons();
-    this._bindToolbarButtons();
+    // this._bindToolbarButtons();
     this._bindPipelineBuilderButtons();
     this._bindModalButtons();
 
@@ -209,17 +209,17 @@ class UIApp {
       toggleDiamBtn.onclick = () => this.visuals.toggleDiameters();
   }
 
-  _bindToolbarButtons() {
-    document.getElementById("resetViewBtn").onclick = () =>
-      this.scene.resetView();
-    document.getElementById("toggleGridBtn").onclick = () =>
-      this.scene.toggleGrid();
-    document.getElementById("topViewBtn").onclick = () => this.scene.topView();
-    document.getElementById("toggleConnectionPointsBtn").onclick = () =>
-      this.visuals.toggleConnectionPoints();
-    document.getElementById("toggleDiametersBtn").onclick = () =>
-      this.visuals.toggleDiameters();
-  }
+  // _bindToolbarButtons() {
+  //   document.getElementById("resetViewBtn").onclick = () =>
+  //     this.scene.resetView();
+  //   document.getElementById("toggleGridBtn").onclick = () =>
+  //     this.scene.toggleGrid();
+  //   document.getElementById("topViewBtn").onclick = () => this.scene.topView();
+  //   document.getElementById("toggleConnectionPointsBtn").onclick = () =>
+  //     this.visuals.toggleConnectionPoints();
+  //   document.getElementById("toggleDiametersBtn").onclick = () =>
+  //     this.visuals.toggleDiameters();
+  // }
 
   _bindPipelineBuilderButtons() {
 
