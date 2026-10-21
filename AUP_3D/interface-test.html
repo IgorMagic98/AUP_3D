@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Автономный тест интерфейса</title>
+  <style>
+    /* ===================================================================
+       1. БАЗОВЫЕ НАСТРОЙКИ
+       =================================================================== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: #e0e0e0;
+      min-height: 100vh;
+      color: #333;
+    }
+
+    /* ===================================================================
+       2. ПЕРЕКЛЮЧАТЕЛЬ ТЕМ (справа)
+       =================================================================== */
+    .theme-switcher {
+      position: fixed; top: 20px; right: 20px;
+      background: white; padding: 16px; border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 1000; width: 260px;
+    }
+    .theme-switcher h3 { font-size: 14px; margin-bottom: 10px; text-align: center; }
+    .theme-btn {
+      display: block; width: 100%; padding: 8px 10px; margin: 4px 0;
+      border: 1px solid #ddd; border-radius: 4px; background: white;
+      cursor: pointer; font-size: 13px; text-align: left; transition: all 0.2s;
+    }
+    .theme-btn:hover { background: #f0f0f0; border-color: #1976d2; }
+    .theme-btn.active { background: #1976d2; color: white; border-color: #1565c0; }
+
+    /* ===================================================================
+       3. RIBBON ПАНЕЛЬ
+       =================================================================== */
+    .ribbon-wrapper {
+      width: 100%;
+      background: linear-gradient(180deg, #1a237e 0%, #0d1442 100%);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      position: sticky; top: 0; z-index: 100;
+      display: flex; flex-direction: column;
+    }
+    .ribbon-tabs { display: flex; padding: 0 10px; background: rgba(0, 0, 0, 0.3); }
+    .ribbon-tab {
+      padding: 10px 20px; background: transparent; color: rgba(255, 255, 255, 0.6);
+      border: none; border-bottom: 3px solid transparent; cursor: pointer;
+      font-size: 13px; font-weight: 600; letter-spacing: 0.5px;
+      transition: all 0.2s; margin-right: 2px; border-radius: 4px 4px 0 0;
+    }
+    .ribbon-tab:hover { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+    .ribbon-tab.active {
+      color: #ffffff;
+      background: linear-gradient(180deg, #1a237e 0%, #0d1442 100%);
+      border-bottom: 2px solid #ffd54f;
+    }
+    .ribbon-content-area { padding: 10px 15px; min-height: 95px; display: flex; align-items: center; }
+    .ribbon-panel { display: none; flex-wrap: wrap; gap: 8px; width: 100%; }
+    .ribbon-panel.active { display: flex; }
+
+    /* Стили кнопок (Тема 7: Квадрат с подписью - по умолчанию) */
+    .btn-ribbon {
+      display: flex !important; flex-direction: column !important;
+      align-items: center !important; justify-content: center !important;
+      width: 72px !important; height: 68px !important; padding: 6px 4px !important;
+      background: transparent; border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px; color: #ffffff; text-align: center; gap: 6px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-ribbon:hover {
+      background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+    .btn-ribbon.active {
+      background: rgba(255, 200, 0, 0.15); border-color: #ffd54f; color: #ffd54f;
+      box-shadow: 0 0 8px rgba(255, 213, 79, 0.3);
+    }
+    .btn-icon { font-size: 22px !important; width: auto !important; height: auto !important; flex-shrink: 0; display: block !important; }
+    .btn-ribbon > span:not(.btn-icon) {
+      font-size: 11px !important; line-height: 1.2 !important; white-space: normal !important;
+      word-wrap: break-word !important; max-width: 100% !important; display: block !important;
+    }
+
+    /* ===================================================================
+       4. ДЕРЕВО ПОСТРОЕНИЯ
+       =================================================================== */
+    .tree-panel {
+      position: absolute; top: 70px; left: 10px; width: 320px;
+      max-height: calc(100vh - 100px); overflow-y: auto; z-index: 100;
+      background: transparent !important; direction: rtl;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .tree-panel.hidden { display: none; }
+    
+    #treeContainer { background: transparent; padding: 12px 10px; direction: ltr; }
+    .tree-root { list-style: none; padding: 0; margin: 0; }
+    .tree-group { margin: 6px 0; }
+    
+    .tree-group-header {
+      display: flex; align-items: center; padding: 8px 10px; cursor: pointer;
+      transition: background 0.15s; background: transparent !important;
+      border-radius: 4px; margin: 0;
+    }
+    .tree-group-header:hover { background: rgba(0, 0, 0, 0.05) !important; }
+    
+    .tree-toggle {
+      width: 16px; height: 16px; display: flex; align-items: center;
+      justify-content: center; margin-right: 8px; font-size: 10px;
+      color: #333; transition: transform 0.2s; background: transparent;
+      border: none; cursor: pointer;
+    }
+    .tree-toggle.collapsed { transform: rotate(-90deg); }
+    .tree-toggle::before { content: '▼'; font-size: 8px; }
+    .tree-toggle.expanded::before { content: '▼'; }
+    .tree-toggle.collapsed::before { content: '▶'; }
+    
+    .tree-group-icon { width: 14px; height: 14px; border-radius: 50%; margin-right: 8px; display: inline-block; flex-shrink: 0; }
+    .tree-group-icon.source { background: #800080; }
+    .tree-group-icon.node { background: #00ff00; }
+    .tree-group-icon.sprinkler { background: #ff0000; }
+    .tree-group-icon.edge { background: #0F1379; }
+    .tree-group-name { flex: 1; font-weight: 600; font-size: 13px; color: #1a1a1a; }
+    
+    .tree-list { list-style: none; padding-left: 24px; margin: 0; }
+    .tree-list.hidden { display: none; }
+    
+    .tree-item {
+      display: flex; align-items: center; padding: 6px 10px; cursor: pointer;
+      transition: background 0.15s; background: transparent !important;
+      border-radius: 4px; margin: 2px 0;
+    }
+    .tree-item:hover { background: rgba(0, 0, 0, 0.05) !important; }
+    .tree-item.selected {
+      background: rgba(25, 118, 210, 0.2) !important;
+      border-left: 3px solid #1976d2; padding-left: 7px;
+    }
+    .tree-item-icon { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; display: inline-block; flex-shrink: 0; }
+    .tree-item-icon.source { background: #800080; }
+    .tree-item-icon.node { background: #00ff00; }
+    .tree-item-icon.sprinkler { background: #ff0000; }
+    .tree-item-icon.edge { background: #0F1379; }
+    .tree-item-name { flex: 1; font-size: 12px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Кнопка открытия дерева */
+    .btn-tree {
+      position: absolute; top: 100%; left: 10px; margin-top: 10px;
+      width: 44px; height: 44px; padding: 0; border: none;
+      background: rgba(15, 19, 121, 0.95); color: white;
+      border-radius: 8px; cursor: pointer; font-size: 20px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      z-index: 101;
+    }
+    .btn-tree:hover { background: rgba(25, 118, 210, 0.95); transform: translateY(-2px); }
+    .btn-tree.active { background: rgba(25, 118, 210, 0.95); box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.4); }
+
+    /* Скроллбар */
+    .tree-panel::-webkit-scrollbar { width: 4px; }
+    .tree-panel::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 2px; }
+    .tree-panel::-webkit-scrollbar-track { background: transparent; }
+
+    /* ===================================================================
+       5. ДЕМО-КОНТЕНТ (Заглушка для 3D сцены)
+       =================================================================== */
+    .demo-content { padding: 40px 20px; max-width: 1200px; margin: 0 auto; }
+    .demo-content h1 { font-size: 24px; color: #333; margin-bottom: 16px; }
+    .demo-content p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 10px; }
+    .demo-canvas {
+      width: 100%; height: 400px; background: #f5f5f5;
+      border: 2px dashed #ccc; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #999; font-size: 18px;
+    }
+
+    /* ===================================================================
+       6. ДОПОЛНИТЕЛЬНЫЕ ТЕМЫ (для переключателя)
+       =================================================================== */
+    body.theme-light .ribbon-wrapper { background: #f5f5f5; }
+    body.theme-light .ribbon-tabs { background: #e0e0e0; }
+    body.theme-light .ribbon-tab { color: #555; }
+    body.theme-light .ribbon-tab.active { background: #f5f5f5; color: #1976d2; border-bottom-color: #1976d2; }
+    body.theme-light .btn-ribbon { color: #333; border: 1px solid #ccc; background: #ffffff; }
+    body.theme-light .btn-ribbon:hover { background: #e3f2fd; border-color: #1976d2; color: #1976d2; }
+    body.theme-light .btn-ribbon.active { background: #1976d2; color: white; border-color: #1565c0; }
+
+    body.theme-minimal .ribbon-wrapper { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    body.theme-minimal .ribbon-tabs { background: #fafafa; border-bottom: 1px solid #eee; }
+    body.theme-minimal .ribbon-tab { color: #777; }
+    body.theme-minimal .ribbon-tab.active { background: #ffffff; color: #1976d2; border-bottom: 2px solid #1976d2; }
+    body.theme-minimal .btn-ribbon { color: #555; border: none; background: transparent; }
+    body.theme-minimal .btn-ribbon:hover { background: #f0f0f0; color: #1976d2; }
+    body.theme-minimal .btn-ribbon.active { background: #1976d2; color: white; }
+  </style>
+</head>
+<body class="theme-square-text">
+
+  <!-- Переключатель тем -->
+  <div class="theme-switcher">
+    <h3>🎨 Выберите тему:</h3>
+    <button class="theme-btn active" data-theme="theme-square-text">7️⃣ Квадрат с подписью (Default)</button>
+    <button class="theme-btn" data-theme="theme-light">3️⃣ Светлая (CAD-стиль)</button>
+    <button class="theme-btn" data-theme="theme-minimal">5️⃣ Минималистичная</button>
+  </div>
+
+  <!-- Ribbon панель -->
+  <div class="ribbon-wrapper">
+    <div class="ribbon-tabs">
+      <button class="ribbon-tab active" data-tab="tab-home">Главная</button>
+      <button class="ribbon-tab" data-tab="tab-pipeline">Трубопровод</button>
+      <button class="ribbon-tab" data-tab="tab-branch">Ветка</button>
+      <button class="ribbon-tab" data-tab="tab-results">Результаты</button>
+      <button class="ribbon-tab" data-tab="tab-view">Вид</button>
+    </div>
+
+    <div class="ribbon-content-area">
+      <div class="ribbon-panel active" id="tab-home">
+        <button class="btn-ribbon" data-action="new"><span class="btn-icon">📄</span><span>Новый</span></button>
+        <button class="btn-ribbon" data-action="open"><span class="btn-icon">📁</span><span>Открыть</span></button>
+        <button class="btn-ribbon" data-action="save"><span class="btn-icon">💾</span><span>Сохранить</span></button>
+      </div>
+
+      <div class="ribbon-panel" id="tab-pipeline">
+        <button class="btn-ribbon" data-action="create-pipe"><span class="btn-icon">🔧</span><span>Создать трубопровод</span></button>
+        <button class="btn-ribbon" data-action="edit-pipe"><span class="btn-icon">✏️</span><span>Редактировать</span></button>
+        <button class="btn-ribbon" data-action="split-pipe"><span class="btn-icon">✂️</span><span>Разбить</span></button>
+        <button class="btn-ribbon" data-action="delete-pipe"><span class="btn-icon">🗑️</span><span>Удалить</span></button>
+      </div>
+
+      <div class="ribbon-panel" id="tab-branch">
+        <button class="btn-ribbon" data-action="create-branch"><span class="btn-icon">🌿</span><span>Создать ветку</span></button>
+      </div>
+
+      <div class="ribbon-panel" id="tab-results">
+        <button class="btn-ribbon" data-action="show-pressure"><span class="btn-icon">🌡️</span><span>Давление</span></button>
+        <button class="btn-ribbon" data-action="show-flow"><span class="btn-icon">💦</span><span>Расход</span></button>
+        <button class="btn-ribbon" data-action="show-chart"><span class="btn-icon">📈</span><span>Характеристика<br>системы</span></button>
+      </div>
+
+      <div class="ribbon-panel" id="tab-view">
+        <button class="btn-ribbon" data-action="reset-view"><span class="btn-icon">🔄</span><span>Сбросить вид</span></button>
+        <button class="btn-ribbon" data-action="toggle-grid"><span class="btn-icon">📐</span><span>Сетка</span></button>
+        <button class="btn-ribbon" data-action="top-view"><span class="btn-icon">⬆️</span><span>Вид сверху</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Кнопка дерева -->
+  <button class="btn-tree" id="btnToggleTree" title="Дерево построения">📁</button>
+
+  <!-- Дерево построения -->
+  <div id="treePanel" class="tree-panel hidden">
+    <div id="treeContainer"></div>
+  </div>
+
+  <!-- Демо-контент -->
+  <div class="demo-content">
+    <h1>Автономный тест интерфейса</h1>
+    <p>Этот файл содержит всё в одном месте: HTML, CSS и JS. Он не зависит от вашего основного проекта.</p>
+    <p>✅ Попробуйте переключать вкладки сверху.<br>✅ Нажмите на кнопку 📁 слева, чтобы открыть/закрыть дерево.<br>✅ Разворачивайте группы в дереве и кликайте на элементы.<br>✅ Меняйте тему справа.</p>
+    <div class="demo-canvas">
+      Здесь будет ваш Canvas с Three.js
+    </div>
+  </div>
+
+  <script>
+    // ===================================================================
+    // 1. ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ТЕМ
+    // ===================================================================
+    const themeBtns = document.querySelectorAll('.theme-btn');
+    const body = document.body;
+
+    themeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        body.className = btn.dataset.theme;
+        themeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // ===================================================================
+    // 2. ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК RIBBON
+    // ===================================================================
+    const tabs = document.querySelectorAll('.ribbon-tab');
+    const panels = document.querySelectorAll('.ribbon-panel');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        
+        tab.classList.add('active');
+        const targetPanel = document.getElementById(tab.dataset.tab);
+        if (targetPanel) targetPanel.classList.add('active');
+      });
+    });
+
+    // ===================================================================
+    // 3. ЛОГИКА ДЕРЕВА ПОСТРОЕНИЯ (С МОК-ДАННЫМИ)
+    // ===================================================================
+    const btnToggleTree = document.getElementById('btnToggleTree');
+    const treePanel = document.getElementById('treePanel');
+    let treeVisible = false;
+
+    btnToggleTree.addEventListener('click', () => {
+      treeVisible = !treeVisible;
+      if (treeVisible) {
+        treePanel.classList.remove('hidden');
+        btnToggleTree.classList.add('active');
+        buildTree(); // Строим дерево при открытии
+      } else {
+        treePanel.classList.add('hidden');
+        btnToggleTree.classList.remove('active');
+      }
+    });
+
+    // Функция построения дерева (Имитация вашей реальной функции)
+    function buildTree() {
+      const container = document.getElementById('treeContainer');
+      container.innerHTML = ''; // Очистка
+      const rootUl = document.createElement('ul');
+      rootUl.className = 'tree-root';
+
+      // Мок-данные (заглушка вместо Engine.scene)
+      const mockData = {
+        sources: [{ name: 'Источник (Насос)', id: 'src1' }],
+        nodes: [{ name: 'Узел 1', id: 'node1' }, { name: 'Узел 2', id: 'node2' }],
+        sprinklers: [{ name: 'Ороситель 1', id: 'spr1' }, { name: 'Ороситель 2', id: 'spr2' }],
+        edges: [{ name: 'Труба 1 (DN50, 5м)', id: 'edge1' }, { name: 'Труба 2 (DN50, 5м)', id: 'edge2' }]
+      };
+
+      const createGroup = (title, type, items) => {
+        if (items.length === 0) return null;
+        const groupLi = document.createElement('li');
+        groupLi.className = 'tree-group';
+
+        const header = document.createElement('div');
+        header.className = 'tree-group-header';
+        header.innerHTML = `
+          <span class="tree-toggle expanded"></span>
+          <span class="tree-group-icon ${type}"></span>
+          <span class="tree-group-name">${title} [${items.length}]</span>
+        `;
+
+        const childUl = document.createElement('ul');
+        childUl.className = 'tree-list';
+
+        items.forEach(item => {
+          const itemLi = document.createElement('li');
+          itemLi.className = 'tree-item';
+          itemLi.innerHTML = `
+            <span class="tree-item-icon ${type}"></span>
+            <span class="tree-item-name" title="${item.name}">${item.name}</span>
+          `;
+          
+          itemLi.addEventListener('click', (e) => {
+            e.stopPropagation();
+            container.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
+            itemLi.classList.add('selected');
+            console.log(`✅ Выбран элемент дерева: ${item.name} (ID: ${item.id})`);
+            // Здесь будет вызов вашей функции focusOnItem(item.object)
+          });
+          childUl.appendChild(itemLi);
+        });
+
+        header.addEventListener('click', () => {
+          const toggle = header.querySelector('.tree-toggle');
+          toggle.classList.toggle('expanded');
+          toggle.classList.toggle('collapsed');
+          childUl.classList.toggle('hidden');
+        });
+
+        groupLi.appendChild(header);
+        groupLi.appendChild(childUl);
+        return groupLi;
+      };
+
+      [createGroup('Источники', 'source', mockData.sources),
+       createGroup('Узлы', 'node', mockData.nodes),
+       createGroup('Оросители', 'sprinkler', mockData.sprinklers),
+       createGroup('Трубопроводы', 'edge', mockData.edges)
+      ].forEach(g => { if (g) rootUl.appendChild(g); });
+
+      container.appendChild(rootUl);
+    }
+
+    // ===================================================================
+    // 4. ОБРАБОТЧИКИ КНОПОК RIBBON (Заглушки для тестов)
+    // ===================================================================
+    document.querySelectorAll('.btn-ribbon').forEach(btn => {
+      btn.addEventListener('click', function() {
+        // Убираем подсветку с соседей
+        this.parentElement.querySelectorAll('.btn-ribbon').forEach(s => s.classList.remove('active'));
+        this.classList.add('active');
+        
+        const action = this.dataset.action;
+        console.log(`🖱️ Нажата кнопка Ribbon: ${action}`);
+        
+        // Пример реакции на нажатие
+        if(action === 'create-branch') {
+           alert('Здесь откроется модальное окно создания ветки');
+        }
+      });
+    });
+
+    // Автоматически открываем дерево при загрузке для демонстрации
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if (!treeVisible) btnToggleTree.click();
+      }, 300);
+    });
+  </script>
+</body>
+</html>
