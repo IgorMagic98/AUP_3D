@@ -4,20 +4,22 @@ volumes:
   media:
 
 services:
-  db:
+  postgres:
     image: postgres:13.10
     env_file: .env
     volumes:
       - pg_data_production:/var/lib/postgresql/data
+    ports:
+      - 5555:5432
   backend:
     build: ./backend/
     env_file: .env
     volumes:
-      - static:/backend_static
+      - static:/staticfiles
       - media:/app/media
       - ./backend:/app
     depends_on:
-      - db
+      - postgres
   aup_3d:
     env_file: .env
     build: ./AUP_3D/
