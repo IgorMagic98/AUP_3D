@@ -11,7 +11,11 @@ const Tree = {
     },
 
     update() {
-        document.getElementById('objectCount').textContent = STATE.objects.length;
+        if (document.getElementById('objectCount'))
+        {
+            document.getElementById('objectCount').textContent = STATE.objects.length;
+        }
+        
         this.container.innerHTML = '';
         if (!STATE.objects.length) {
             this.container.innerHTML = '<div class="tree-empty">Сцена пуста.</div>';

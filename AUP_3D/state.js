@@ -42,15 +42,7 @@ const CONFIG = {
 };
 
 const STATE = {
-
-
-    Three_D_objects: [],
-
-
-
-
-
-    
+    Three_D_objects: [],    
     objects: [],
     objectCounter: 0,
     pipelineCounter: 0,
@@ -96,6 +88,12 @@ const STATE = {
     project: { name: null, folderHandle: null, projectFolderHandle: null }
 };
 
+
+const VisualPipelins = {
+    d_pipe_base: 0.05,
+    d_node_base: 0.25
+}
+
 function genNodeId() {
     return 'N_' + String(++STATE.nodeCounter).padStart(4, '0');
 }
@@ -121,4 +119,4 @@ const Utils = {
         setTimeout(() => e.classList.remove('show'), d);
     }
 };
-let BINGO = "ЖasdadОПА";
+// let BINGO = "ЖasdadОПА";

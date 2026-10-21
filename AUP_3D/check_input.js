@@ -9,6 +9,17 @@ document.getElementById("pbLength").addEventListener("blur", (event) => {
     //     event.target.value = "100"; 
     // }
 });
+// слушатель для обработки ячейки ввода длины при создании трубопровода
+document.getElementById("pipe_edit").addEventListener("blur", (event) => {
+    let value = parseFloat(event.target.value);
+        
+    if (isNaN(value) || value < 0.1) {
+        event.target.value = "0.1"; 
+    } 
+    // else if (value > 100) {
+    //     event.target.value = "100"; 
+    // }
+});
 
 // Функция заполнения типа трубы 
 async function get_load_pipe(type_tube, dn_tube) {    
@@ -26,12 +37,14 @@ async function get_load_pipe(type_tube, dn_tube) {
     get_load_pbDiameter(selectPipeTube.value, dn_tube);    
 }
 get_load_pipe("get_tube_pipe", "pbDiameter");
-get_load_pipe("get_tube_pipe_sprinkler", "pbDiameter_sprinkler");
+// get_load_pipe("get_tube_pipe_sprinkler", "pbDiameter_sprinkler_0");
+get_load_pipe("get_tube_pipe_edit", "pbDiameter_edit");
 // функция заполнения ДУ для типа труб и сохранени ег освйоств
 async function get_load_pbDiameter(TubeTypeValue, dn_tube) {
     const tube_DN = await getTube(TubeTypeValue);
     console.log("tube_DN массив данных",tube_DN);
     let pdDN = document.getElementById(dn_tube);
+    if (!pdDN) return;
     pdDN.innerHTML = "";
     tube_DN.forEach((tube) => {
         const option = document.createElement("option");
@@ -45,23 +58,33 @@ async function get_load_pbDiameter(TubeTypeValue, dn_tube) {
     // pdDN.value = "6";    
     pdDN.dispatchEvent(new Event("change")); 
 }
-// Cлушатель для выбранного ДУ , вывод свойств
-document.getElementById("pbDiameter").addEventListener("change", (event) => {
-    const selectedOption = event.target.selectedOptions[0];
-    const id = selectedOption.value;
-    const nomSize = selectedOption.textContent;    
-});
-// Cлушатель для выбранного ДУ , вывод свойств
-document.getElementById("pbDiameter_sprinkler").addEventListener("change", (event) => {
-    const selectedOption = event.target.selectedOptions[0];
-    const id = selectedOption.value;
-    const nomSize = selectedOption.textContent;    
-});
+// // Cлушатель для выбранного ДУ , вывод свойств
+// document.getElementById("pbDiameter").addEventListener("change", (event) => {
+//     const selectedOption = event.target.selectedOptions[0];
+//     const id = selectedOption.value;
+//     const nomSize = selectedOption.textContent;    
+// });
+// // Cлушатель для выбранного ДУ , вывод свойств
+// // document.getElementById("pbDiameter_sprinkler").addEventListener("change", (event) => {
+// //     const selectedOption = event.target.selectedOptions[0];
+// //     const id = selectedOption.value;
+// //     const nomSize = selectedOption.textContent;    
+// // });
+// // Cлушатель для выбранного ДУ , вывод свойств
+// document.getElementById("pbDiameter_edit").addEventListener("change", (event) => {
+//     const selectedOption = event.target.selectedOptions[0];
+//     const id = selectedOption.value;
+//     const nomSize = selectedOption.textContent;    
+// });
 // Cлушатель для выбранного ДУ , вывод свойств
 document.getElementById("get_tube_pipe").addEventListener("change", (event) => {
     get_load_pbDiameter(event.target.value, "pbDiameter");   
 });
 // Cлушатель для выбранного ДУ , вывод свойств
-document.getElementById("get_tube_pipe_sprinkler").addEventListener("change", (event) => {
-    get_load_pbDiameter(event.target.value, "pbDiameter_sprinkler");   
+// document.getElementById("get_tube_pipe_sprinkler").addEventListener("change", (event) => {
+//     get_load_pbDiameter(event.target.value, "pbDiameter_sprinkler");   
+// });
+// Cлушатель для выбранного ДУ , вывод свойств
+document.getElementById("get_tube_pipe_edit").addEventListener("change", (event) => {
+    get_load_pbDiameter(event.target.value, "pbDiameter_edit");   
 });

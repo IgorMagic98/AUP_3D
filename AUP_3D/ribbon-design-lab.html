@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Лаборатория дизайна: Вкладки Ribbon</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    /* ===================================================================
+       ПЕРЕКЛЮЧАТЕЛЬ ТЕМ (справа)
+       =================================================================== */
+    .theme-switcher {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      z-index: 1000;
+      width: 260px;
+    }
+
+    .theme-switcher h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #333;
+      text-align: center;
+    }
+
+    .theme-btn {
+      display: block;
+      width: 100%;
+      padding: 8px 10px;
+      margin: 4px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      font-size: 13px;
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .theme-btn:hover { background: #f0f0f0; border-color: #1976d2; }
+    .theme-btn.active { background: #1976d2; color: white; border-color: #1565c0; }
+
+    /* ===================================================================
+       RIBBON ПАНЕЛЬ (ОБЁРТКА)
+       =================================================================== */
+    .ribbon-wrapper {
+      width: 100%;
+      background-color: #0F1379;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ribbon-tabs {
+      display: flex;
+      padding: 0 10px;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .ribbon-tab {
+      padding: 10px 20px;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.6);
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+      margin-right: 2px;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .ribbon-tab:hover { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+    .ribbon-tab.active {
+      color: #ffffff;
+      background: #0F1379;
+      border-bottom: 3px solid #ffd54f;
+    }
+
+    .ribbon-content-area {
+      padding: 10px 15px;
+      min-height: 95px;
+      display: flex;
+      align-items: center;
+    }
+
+    .ribbon-panel {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .ribbon-panel.active { display: flex; }
+
+    /* БАЗОВЫЕ СТИЛИ КНОПОК */
+    .btn-ribbon {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 10px;
+      font-weight: 500;
+      padding: 6px 10px;
+      white-space: nowrap;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      background: transparent;
+    }
+
+    .btn-ribbon:hover { filter: brightness(1.2); transform: translateY(-1px); }
+    .btn-ribbon.active { box-shadow: 0 0 0 2px rgba(255, 200, 0, 0.5); }
+    .btn-icon { font-size: 14px; width: 16px; text-align: center; }
+
+    /* ===================================================================
+       ТЕМА 1: КЛАССИЧЕСКАЯ ТЁМНАЯ
+       =================================================================== */
+    body.theme-classic .ribbon-wrapper { background-color: #0F1379; }
+    body.theme-classic .ribbon-tabs { background: #0a0d5e; }
+    body.theme-classic .ribbon-tab.active { background: #0F1379; }
+    body.theme-classic .btn-ribbon { color: #ffffff; border-color: rgba(255, 255, 255, 0.2); }
+    body.theme-classic .btn-ribbon:hover { background: rgba(255, 255, 255, 0.15); }
+    body.theme-classic .btn-ribbon.active { background: rgba(255, 200, 0, 0.3); color: #ffd54f; border-color: #ffd54f; }
+
+    /* ===================================================================
+       ТЕМА 2: СОВРЕМЕННЫЙ ГРАДИЕНТ
+       =================================================================== */
+    body.theme-gradient .ribbon-wrapper { background: linear-gradient(180deg, #1a237e 0%, #0d1442 100%); }
+    body.theme-gradient .ribbon-tabs { background: rgba(0, 0, 0, 0.3); }
+    body.theme-gradient .ribbon-tab.active { background: linear-gradient(180deg, #1a237e 0%, #0d1442 100%); }
+    body.theme-gradient .btn-ribbon { color: #ffffff; border-color: rgba(255, 255, 255, 0.15); border-radius: 6px; }
+    body.theme-gradient .btn-ribbon:hover { background: rgba(255, 255, 255, 0.15); }
+    body.theme-gradient .btn-ribbon.active { background: rgba(255, 200, 0, 0.25); color: #ffd54f; border-color: #ffd54f; }
+
+    /* ===================================================================
+       ТЕМА 3: СВЕТЛАЯ (CAD-стиль)
+       =================================================================== */
+    body.theme-light .ribbon-wrapper { background: #f5f5f5; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    body.theme-light .ribbon-tabs { background: #e0e0e0; }
+    body.theme-light .ribbon-tab { color: #555; }
+    body.theme-light .ribbon-tab:hover { color: #1976d2; background: rgba(25, 118, 210, 0.1); }
+    body.theme-light .ribbon-tab.active { background: #f5f5f5; color: #1976d2; border-bottom-color: #1976d2; }
+    body.theme-light .btn-ribbon { color: #333; border: 1px solid #ccc; background: #ffffff; }
+    body.theme-light .btn-ribbon:hover { background: #e3f2fd; border-color: #1976d2; color: #1976d2; }
+    body.theme-light .btn-ribbon.active { background: #1976d2; color: white; border-color: #1565c0; }
+
+    /* ===================================================================
+       ТЕМА 4: БОЛЬШИЕ ИКОНКИ С ПОДПИСЬЮ
+       =================================================================== */
+    body.theme-icons .ribbon-wrapper { background: linear-gradient(180deg, #1a237e 0%, #0d1442 100%); }
+    body.theme-icons .ribbon-tabs { background: rgba(0, 0, 0, 0.3); }
+    body.theme-icons .ribbon-tab.active { background: linear-gradient(180deg, #1a237e 0%, #0d1442 100%); }
+    
+    body.theme-icons .btn-ribbon {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 80px;
+      height: 76px;
+      padding: 8px 4px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      color: #ffffff;
+      text-align: center;
+      gap: 8px;
+    }
+
+    body.theme-icons .btn-icon {
+      font-size: 28px !important;
+      width: auto !important;
+      height: auto !important;
+      flex-shrink: 0;
+    }
+
+    body.theme-icons .btn-ribbon span:not(.btn-icon) {
+      font-size: 12px;
+      line-height: 1.2;
+      white-space: normal;
+      word-wrap: break-word;
+      max-width: 100%;
+      display: block !important;
+      font-weight: 500;
+    }
+
+    body.theme-icons .btn-ribbon:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
+    body.theme-icons .btn-ribbon.active { background: rgba(255, 200, 0, 0.2); color: #ffd54f; border-color: #ffd54f; box-shadow: 0 0 8px rgba(255, 213, 79, 0.3); }
+
+    /* ===================================================================
+       ТЕМА 5: МИНИМАЛИСТИЧНАЯ
+       =================================================================== */
+    body.theme-minimal .ribbon-wrapper { background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    body.theme-minimal .ribbon-tabs { background: #fafafa; border-bottom: 1px solid #eee; }
+    body.theme-minimal .ribbon-tab { color: #777; font-weight: 500; }
+    body.theme-minimal .ribbon-tab:hover { color: #1976d2; }
+    body.theme-minimal .ribbon-tab.active { background: #ffffff; color: #1976d2; border-bottom: 2px solid #1976d2; }
+    body.theme-minimal .btn-ribbon { color: #555; border: none; background: transparent; padding: 6px 10px; }
+    body.theme-minimal .btn-ribbon:hover { background: #f0f0f0; color: #1976d2; }
+    body.theme-minimal .btn-ribbon.active { background: #1976d2; color: white; }
+
+    /* ===================================================================
+       ТЕМА 6: ТОЛЬКО ИКОНКА (СУПЕР-КОМПАКТНАЯ)
+       =================================================================== */
+    body.theme-icon-only .ribbon-wrapper { 
+      background: linear-gradient(180deg, #1a237e 0%, #0d1442 100%); 
+    }
+    body.theme-icon-only .ribbon-tabs { 
+      background: rgba(0, 0, 0, 0.3); 
+    }
+    body.theme-icon-only .ribbon-tab {
+      padding: 6px 14px;
+      font-size: 12px;
+    }
+    body.theme-icon-only .ribbon-tab.active { 
+      background: linear-gradient(180deg, #1a237e 0%, #0d1442 100%); 
+      border-bottom: 2px solid #ffd54f; 
+      color: #fff; 
+    }
+
+    body.theme-icon-only .ribbon-content-area {
+      padding: 6px 10px;
+      min-height: 44px;
+    }
+
+    body.theme-icon-only .btn-ribbon {
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      background: transparent; 
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px; 
+      color: #ffffff; 
+      position: relative;
+      gap: 0;
+    }
+
+    body.theme-icon-only .btn-icon { 
+      font-size: 16px;
+      width: auto; 
+      height: auto; 
+      line-height: 1;
+    }
+
+    body.theme-icon-only .btn-ribbon span:not(.btn-icon) { 
+      display: none !important; 
+    }
+
+    body.theme-icon-only .btn-ribbon::after {
+      content: attr(data-tooltip); 
+      position: absolute; 
+      bottom: 115%; 
+      left: 50%;
+      transform: translateX(-50%) translateY(8px); 
+      background: rgba(0, 0, 0, 0.9);
+      color: #ffffff; 
+      padding: 4px 8px; 
+      border-radius: 4px; 
+      font-size: 10px;
+      white-space: nowrap; 
+      opacity: 0; 
+      visibility: hidden; 
+      transition: all 0.2s;
+      pointer-events: none; 
+      z-index: 1000;
+    }
+
+    body.theme-icon-only .btn-ribbon:hover::after { 
+      opacity: 1; 
+      visibility: visible; 
+      transform: translateX(-50%) translateY(0); 
+    }
+
+    body.theme-icon-only .btn-ribbon:hover { 
+      background: rgba(255, 255, 255, 0.15); 
+      transform: translateY(-1px);
+    }
+
+    body.theme-icon-only .btn-ribbon.active { 
+      background: rgba(255, 200, 0, 0.15); 
+      border-color: #ffd54f; 
+      color: #ffd54f; 
+    }
+
+    body.theme-icon-only .ribbon-panel {
+      gap: 4px;
+    }
+
+    /* ===================================================================
+       ТЕМА 7: КВАДРАТ С ПОДПИСЬЮ (ИСПРАВЛЕНО - подписи теперь видны)
+       =================================================================== */
+    body.theme-square-text .ribbon-wrapper { 
+      background: linear-gradient(180deg, #1a237e 0%, #0d1442 100%); 
+    }
+    body.theme-square-text .ribbon-tabs { 
+      background: rgba(0, 0, 0, 0.3); 
+    }
+    body.theme-square-text .ribbon-tab { color: rgba(255, 255, 255, 0.6); }
+    body.theme-square-text .ribbon-tab:hover { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+    body.theme-square-text .ribbon-tab.active { 
+      color: #ffffff; 
+      background: linear-gradient(180deg, #1a237e 0%, #0d1442 100%); 
+      border-bottom: 2px solid #ffd54f; 
+    }
+
+    /* ✅ ИСПРАВЛЕНИЕ: используем !important и более специфичный селектор */
+    body.theme-square-text .btn-ribbon {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 72px !important;
+      height: 68px !important;  
+      padding: 6px 4px !important;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: #ffffff;
+      text-align: center;
+      gap: 6px;
+    }
+
+    body.theme-square-text .btn-icon {
+      font-size: 22px !important;
+      width: auto !important;
+      height: auto !important;
+      flex-shrink: 0;
+      display: block !important;
+    }
+
+    /* ✅ КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: подписи теперь гарантированно видны */
+    body.theme-square-text .btn-ribbon > span:not(.btn-icon) {
+      font-size: 11px !important;
+      line-height: 1.2 !important;
+      white-space: normal !important;
+      word-wrap: break-word !important;
+      max-width: 100% !important;
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+
+    body.theme-square-text .btn-ribbon:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    body.theme-square-text .btn-ribbon.active {
+      background: rgba(255, 200, 0, 0.15);
+      border-color: #ffd54f;
+      color: #ffd54f;
+      box-shadow: 0 0 8px rgba(255, 213, 79, 0.3);
+    }
+
+    /* ===================================================================
+       ДЕМО-КОНТЕНТ
+       =================================================================== */
+    .demo-content { padding: 40px 20px; max-width: 1200px; margin: 0 auto; }
+    .demo-content h1 { font-size: 24px; color: #333; margin-bottom: 16px; }
+    .demo-content p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 10px; }
+    .demo-canvas {
+      width: 100%; height: 400px; background: #f5f5f5;
+      border: 2px dashed #ccc; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #999; font-size: 18px;
+    }
+  </style>
+</head>
+<body class="theme-square-text"> <!-- По умолчанию включена тема "Квадрат с подписью" -->
+
+  <!-- Переключатель тем -->
+  <div class="theme-switcher">
+    <h3>🎨 Выберите тему:</h3>
+    <button class="theme-btn" data-theme="theme-classic">1️⃣ Классическая тёмная</button>
+    <button class="theme-btn" data-theme="theme-gradient">2️⃣ Современный градиент</button>
+    <button class="theme-btn" data-theme="theme-light">3️⃣ Светлая (CAD-стиль)</button>
+    <button class="theme-btn" data-theme="theme-icons">4️⃣ Большие иконки с подписью</button>
+    <button class="theme-btn" data-theme="theme-minimal">5️⃣ Минималистичная</button>
+    <button class="theme-btn" data-theme="theme-icon-only">6️⃣ Только иконка (компактная)</button>
+    <button class="theme-btn active" data-theme="theme-square-text">7️⃣ Квадрат с подписью</button>
+  </div>
+
+  <!-- Ribbon панель с вкладками -->
+  <div class="ribbon-wrapper">
+    <div class="ribbon-tabs">
+      <button class="ribbon-tab active" data-tab="tab-home">Главная</button>
+      <button class="ribbon-tab" data-tab="tab-sprinkler">Подбор оросителя</button>
+      <button class="ribbon-tab" data-tab="tab-pipeline">Трубопровод</button>
+      <button class="ribbon-tab" data-tab="tab-branch">Ветка</button>
+      <button class="ribbon-tab" data-tab="tab-sources">Источники</button>
+      <button class="ribbon-tab" data-tab="tab-calc">Расчет</button>
+      <button class="ribbon-tab" data-tab="tab-results">Результаты</button>
+      <button class="ribbon-tab" data-tab="tab-view">Вид</button>
+    </div>
+
+    <div class="ribbon-content-area">
+      <!-- Вкладка: Главная -->
+      <div class="ribbon-panel active" id="tab-home">
+        <button class="btn-ribbon" data-tooltip="Новый проект"><span class="btn-icon">📄</span><span>Новый</span></button>
+        <button class="btn-ribbon" data-tooltip="Открыть проект"><span class="btn-icon">📁</span><span>Открыть</span></button>
+        <button class="btn-ribbon" data-tooltip="Сохранить"><span class="btn-icon">💾</span><span>Сохранить</span></button>
+        <button class="btn-ribbon" data-tooltip="Сохранить как"><span class="btn-icon">📥</span><span>Сохранить как</span></button>        
+      </div>
+
+      <!-- Вкладка: Подбор оросителя -->
+      <div class="ribbon-panel" id="tab-sprinkler">
+        <button class="btn-ribbon" data-tooltip="Подобрать ороситель"><span class="btn-icon">🚿</span><span>Подобрать ороситель</span></button>
+        <button class="btn-ribbon" data-tooltip="Настроить расход"><span class="btn-icon">📏</span><span>Настроить расход</span></button>
+      </div>
+
+      <!-- Вкладка: Трубопровод -->
+      <div class="ribbon-panel" id="tab-pipeline">
+        <button class="btn-ribbon" id="menuCreatePipeline" data-tooltip="Создать трубопровод"><span class="btn-icon">🔧</span><span>Создать трубопровод</span></button>
+        <button class="btn-ribbon" id="menuPipeline_Edit" data-tooltip="Редактировать"><span class="btn-icon">✏️</span><span>Редактировать</span></button>
+        <button class="btn-ribbon" id="menuSplitPipeline" data-tooltip="Разбить трубопровод"><span class="btn-icon">✂️</span><span>Разбить трубопровод</span></button>
+        <button class="btn-ribbon" id="delete_SplitPipeline" data-tooltip="Удалить трубопровод"><span class="btn-icon">🗑️</span><span>Удалить</span></button>
+      </div>
+
+      <!-- Вкладка: Ветка -->
+      <div class="ribbon-panel" id="tab-branch">
+        <button class="btn-ribbon" id="menuCreateBranch" data-tooltip="Создать ветку"><span class="btn-icon">🌿</span><span>Создать ветку</span></button>
+      </div>
+
+      <!-- Вкладка: Источники -->
+      <div class="ribbon-panel" id="tab-sources">
+        <button class="btn-ribbon" id="src_tank" data-tooltip="Резервуар"><span class="btn-icon">🛢️</span><span>Резервуар</span></button>
+        <button class="btn-ribbon" id="src_city" data-tooltip="Параметры гор. водоснабж."><span class="btn-icon">🏙️</span><span>Параметры гор. водоснабж.</span></button>
+        <button class="btn-ribbon" id="src_pump" data-tooltip="Насос"><span class="btn-icon">🚰</span><span>Насос</span></button>
+      </div>
+
+      <!-- Вкладка: Расчет -->
+      <div class="ribbon-panel" id="tab-calc">
+        <button class="btn-ribbon" id="menuShowGraph" data-tooltip="Расчет"><span class="btn-icon">▶️</span><span>Расчет</span></button>
+        <button class="btn-ribbon" id="menuSceneSettings" data-tooltip="Параметры сцены"><span class="btn-icon">⚙️</span><span>Параметры сцены</span></button>
+      </div>
+
+      <!-- Вкладка: Результаты -->
+      <div class="ribbon-panel" id="tab-results">
+        <button class="btn-ribbon" data-tooltip="Давление"><span class="btn-icon">🌡️</span><span>Давление</span></button>
+        <button class="btn-ribbon" data-tooltip="Расход"><span class="btn-icon">💦</span><span>Расход</span></button>        
+        <button class="btn-ribbon" data-tooltip="Скорость"><span class="btn-icon"></span><span>Скорость</span></button>
+        <button class="btn-ribbon" id="menuShowAutoConnections" data-tooltip="Характеристика H(Q)">
+          <span class="btn-icon">📈</span>
+          <span>Характеристика<br>системы</span>
+        </button>
+      </div>
+
+      <!-- Вкладка: Вид -->
+      <div class="ribbon-panel" id="tab-view">
+        <button class="btn-ribbon" id="menuResetView" data-tooltip="Сбросить вид"><span class="btn-icon">🔄</span><span>Сбросить вид</span></button>
+        <button class="btn-ribbon" id="menuToggleGrid" data-tooltip="Сетка: Вкл/Выкл"><span class="btn-icon"></span><span>Сетка: Вкл/Выкл</span></button>
+        <button class="btn-ribbon" id="menuTopView" data-tooltip="Вид сверху"><span class="btn-icon">⬆️</span><span>Вид сверху</span></button>
+        <button class="btn-ribbon" id="menuToggleCameraMode" data-tooltip="Перспектива/Орто"><span class="btn-icon">📷</span><span>Перспектива/Орто</span></button>
+        <button class="btn-ribbon" id="menuToggleConnectionPoints" data-tooltip="Узлы: Вкл/Выкл"><span class="btn-icon"></span><span>Узлы: Вкл/Выкл</span></button>
+        <button class="btn-ribbon" id="menuToggleDiameters" data-tooltip="Диаметры: Вкл/Выкл"><span class="btn-icon">⭕</span><span>Диаметры: Вкл/Выкл</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Демо-контент -->
+  <div class="demo-content">
+    <h1>Лаборатория дизайна: Вкладки</h1>
+    <p>
+      По умолчанию активна тема <strong>«7️⃣ Квадрат с подписью»</strong>. 
+      Исправлено: подписи под иконками теперь отображаются корректно благодаря использованию <code>!important</code> и более специфичного CSS-селектора <code>&gt; span:not(.btn-icon)</code>.
+    </p>
+    <p>
+      Используйте переключатель справа, чтобы сравнить с другими стилями.
+    </p>
+    <div class="demo-canvas">
+      Здесь будет ваша 3D-сцена Three.js
+    </div>
+  </div>
+
+  <script>
+    // 1. Логика переключения ТЕМ
+    const themeBtns = document.querySelectorAll('.theme-btn');
+    const body = document.body;
+
+    themeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        body.className = '';
+        const theme = btn.dataset.theme;
+        body.classList.add(theme);
+        
+        themeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // 2. Логика переключения ВКЛАДОК
+    const tabs = document.querySelectorAll('.ribbon-tab');
+    const panels = document.querySelectorAll('.ribbon-panel');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+
+        const targetId = tab.dataset.tab;
+        const targetPanel = document.getElementById(targetId);
+        if (targetPanel) targetPanel.classList.add('active');
+      });
+    });
+
+    // 3. Демонстрация клика по кнопке (подсветка)
+    document.querySelectorAll('.btn-ribbon').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const siblings = this.parentElement.querySelectorAll('.btn-ribbon');
+        siblings.forEach(s => s.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+
+</body>
+</html>
