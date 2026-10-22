@@ -38,7 +38,7 @@ async function get_load_pipe(type_tube, dn_tube) {
 }
 get_load_pipe("get_tube_pipe", "pbDiameter");
 get_load_pipe("get_tube_pipe_sprinkler", "pbDiameter_sprinkler_0");
-// get_load_pipe("get_tube_pipe_edit", "pbDiameter_edit");
+get_load_pipe("get_tube_pipe_edit", "pbDiameter_edit");
 // функция заполнения ДУ для типа труб и сохранени ег освйоств
 async function get_load_pbDiameter(TubeTypeValue, dn_tube) {
     const tube_DN = await getTube(TubeTypeValue);
