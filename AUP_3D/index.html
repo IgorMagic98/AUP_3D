@@ -1,269 +1,415 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Модуль построения конфигурации АУП в 3D</title>
-  <!-- Используем unpkg (более надежный) -->
 
-  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script> -->
-
+  <link rel="icon" type="image/x-icon" href="ico/muu_sa.ico">
   <script src="new_three.js"></script>
   <script src="orbit.js"></script>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="styles.css">
+
+
+  <style>
+    /* ===================================================================
+       1. СТИЛИ НОВОГО RIBBON 
+       =================================================================== */
+    body.theme-square-text .ribbon-wrapper { 
+      background: #0F1379;
+    }
+    .ribbon-wrapper {
+      width: 100%;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      position: sticky; top: 0; z-index: 100;
+      display: flex; flex-direction: column;
+    }
+    .ribbon-tabs { display: flex; padding: 0 10px; background: rgba(0, 0, 0, 0.3); overflow-x: auto; }
+    .ribbon-tab {
+      padding: 10px 20px; background: transparent; color: rgba(255, 255, 255, 0.6);
+      border: none; border-bottom: 3px solid transparent; cursor: pointer;
+      font-size: 13px; font-weight: 600; letter-spacing: 0.5px;
+      transition: all 0.2s; margin-right: 2px; border-radius: 4px 4px 0 0;
+      white-space: nowrap;
+    }
+    .ribbon-tab:hover { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+    .ribbon-tab.active {
+      color: #ffffff; 
+      background: #0F1379;  /* Тот же цвет, что и у панели */
+      border-bottom: 2px solid #ffd54f;
+    }
+    .ribbon-content-area { padding: 10px 15px; min-height: 95px; display: flex; align-items: center; }
+    .ribbon-panel { display: none; flex-wrap: wrap; gap: 8px; width: 100%; }
+    .ribbon-panel.active { display: flex; }
+
+    .btn-ribbon {
+      display: flex !important; flex-direction: column !important;
+      align-items: center !important; justify-content: center !important;
+      width: 72px !important; height: 68px !important; padding: 6px 4px !important;
+      background: transparent; border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px; color: #ffffff; text-align: center; gap: 6px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-ribbon:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); transform: translateY(-2px); }
+    .btn-ribbon.active { background: rgba(255, 200, 0, 0.15); border-color: #ffd54f; color: #ffd54f; box-shadow: 0 0 8px rgba(255, 213, 79, 0.3); }
+    .btn-icon { font-size: 22px !important; width: auto !important; height: auto !important; flex-shrink: 0; display: block !important; }
+    .btn-ribbon > span:not(.btn-icon) {
+      font-size: 11px !important; line-height: 1.2 !important; white-space: normal !important;
+      word-wrap: break-word !important; max-width: 100% !important; display: block !important;
+    }
+
+    /* ===================================================================
+   2. СТИЛИ ОРИГИНАЛЬНОГО ДЕРЕВА (исправлено позиционирование)
+   =================================================================== */
+  .tree-header-wrapper {
+    position: fixed; 
+    top: 150px;  /* Было 50px → стало 105px (под ribbon-панелью) */
+    left: 10px;
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    z-index: 102;
+  }
+
+  .floating-tree-btn {
+    width: 44px; 
+    height: 44px; 
+    padding: 0; 
+    border: none;
+    background: rgba(15, 19, 121, 0.95); 
+    color: white;
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-size: 20px;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    transition: all 0.15s; 
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0; 
+    opacity: 0.5;
+  }
+  .floating-tree-btn:hover { 
+    background: rgba(25, 118, 210, 0.95); 
+    transform: translateY(-2px); 
+    opacity: 0.8; 
+  }
+  .floating-tree-btn.active { 
+    background: rgba(25, 118, 210, 0.95); 
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.4); 
+    opacity: 1; 
+  }
+
+  .tree-title-text {
+    font-size: 14px; 
+    font-weight: 700; 
+    color: #1a1a1a;
+    white-space: nowrap; 
+    opacity: 0; 
+    transform: translateX(-10px);
+    transition: all 0.2s ease; 
+    pointer-events: none;
+    background: rgba(255,255,255,0.9); 
+    padding: 4px 8px; 
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .tree-title-text.visible { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+
+  .tree-panel {
+    position: fixed; 
+    top: 155px;  /* Было 100px → стало 155px (под кнопкой и заголовком) */
+    left: 10px;
+    width: 320px; 
+    max-height: calc(100vh - 125px);  /* Увеличили отступ сверху */
+    overflow-y: auto; 
+    z-index: 100;
+    background: transparent !important; 
+    direction: rtl;
+  }
+  .tree-panel.hidden { 
+    display: none; 
+  }
+
+  #treeContainer { 
+    background: transparent; 
+    padding: 0 10px 12px 10px;
+    margin-top: -10px;  /* ← Поднимает контейнер вверх */
+    direction: ltr; 
+  }
+
+    .tree-root { list-style: none; padding: 0; margin: 0; }
+    .tree-group { margin: 6px 0; }
+    .tree-group-header {
+      display: flex; align-items: center; padding: 8px 10px; cursor: pointer;
+      transition: background 0.15s; background: transparent !important;
+      border-radius: 4px; margin: 0;
+    }
+    .tree-group-header:hover { background: rgba(0, 0, 0, 0.05) !important; }
+    .tree-toggle {
+      width: 16px; height: 16px; display: flex; align-items: center;
+      justify-content: center; margin-right: 8px; font-size: 10px;
+      color: #333; transition: transform 0.2s; background: transparent;
+      border: none; cursor: pointer;
+    }
+    .tree-toggle.collapsed { transform: rotate(-90deg); }
+    .tree-toggle::before { content: '▼'; font-size: 8px; }
+    .tree-toggle.expanded::before { content: '▼'; }
+    .tree-toggle.collapsed::before { content: '▶'; }
+    .tree-group-icon { width: 14px; height: 14px; border-radius: 50%; margin-right: 8px; display: inline-block; flex-shrink: 0; }
+    .tree-group-icon.source { background: #800080; }
+    .tree-group-icon.node { background: #00ff00; }
+    .tree-group-icon.sprinkler { background: #ff0000; }
+    .tree-group-icon.edge { background: #0F1379; }
+    .tree-group-name { flex: 1; font-weight: 600; font-size: 13px; color: #1a1a1a; }
+    .tree-list { list-style: none; padding-left: 24px; margin: 0; }
+    .tree-list.hidden { display: none; }
+    .tree-item {
+      display: flex; align-items: center; padding: 6px 10px; cursor: pointer;
+      transition: background 0.15s; background: transparent !important;
+      border-radius: 4px; margin: 2px 0;
+    }
+    .tree-item:hover { background: rgba(0, 0, 0, 0.05) !important; }
+    .tree-item.selected { background: rgba(25, 118, 210, 0.2) !important; border-left: 3px solid #1976d2; padding-left: 7px; }
+    .tree-item-icon { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; display: inline-block; flex-shrink: 0; }
+    .tree-item-icon.source { background: #800080; }
+    .tree-item-icon.node { background: #00ff00; }
+    .tree-item-icon.sprinkler { background: #ff0000; }
+    .tree-item-icon.edge { background: #0F1379; }
+    .tree-item-name { flex: 1; font-size: 12px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    .tree-panel::-webkit-scrollbar { width: 4px; }
+    .tree-panel::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 2px; }
+    .tree-panel::-webkit-scrollbar-track { background: transparent; }
+
+
+    /* Иконка в левом верхнем углу ribbon */
+    .ribbon-logo {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      z-index: 101;
+    }
+
+    .ribbon-logo img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;     
+      padding: 2px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    /* Сдвигаем вкладки вправо, чтобы не перекрывали иконку */
+    .ribbon-tabs {
+      display: flex;
+      padding: 0 10px 0 45px;  /* ← Добавили отступ слева 45px */
+      background: rgba(0, 0, 0, 0.3);
+      overflow-x: auto;
+    }
+  </style>
 </head>
 
-<body class="bg-dark m-0 p-0">
-  <div class="container-fluid p-0">
-    <div class="ribbon-wrapper">
-      <div class="ribbon-bar">
-        <!-- <div class="ribbon-section">
-          <div class="ribbon-btn-group">
-            <button class="btn-ribbon" id="menuNew">Новый проект...</button>
-            <button class="btn-ribbon" id="menuOpen">Открыть...</button>
-            <button class="btn-ribbon" id="menuSave">Сохранить...</button>
-          </div>
-          <div class="ribbon-title">Проект расчета</div>
-        </div> -->
-        <div class="ribbon-section">
-          <div class="ribbon-btn-group">
-            <button class="btn-ribbon" id="menuCreatePipeline" style="color: #ffffff;">Создать трубопровод</button>
-            <button class="btn-ribbon" id="menuPipeline_Edit" style="color: #ffffff;">Редактировать трубопровод</button>
-            <button class="btn-ribbon" id="menuSplitPipeline" style="color: #ffffff;">Разбить трубопровод</button>            
-            <button class="btn-ribbon" id="delete_SplitPipeline" style="color: #ffffff;">Удалить трубопровод</button>
-            
-            <!-- <button class="btn-ribbon" id="menuDuplicateObject">Копировать...</button>
-            <div style="height:1px;background:rgba(255,255,255,0.3);margin:4px 0;width:100%;"></div>
-            <button class="btn-ribbon" id="menuConnectPoints">Соединить узлы...</button>
-            <button class="btn-ribbon" id="menuConnectBranches">Соединить ветки...</button> -->
-          </div>
-          <!-- <div class="ribbon-title">Трубопровод</div> -->
-          </div>
-        <div class="ribbon-section">
-          <div class="ribbon-btn-group">
-            <button class="btn-ribbon" id="menuCreateBranch" style="color: #ffffff;">Создать ветку</button>
-            <button class="btn-ribbon" id="Add_list_object" style="color: #ffffff;">▶ Расчет</button>
-            <button class="btn-ribbon" id="Check_3D" style="color: #09bd36;">ПроCHECKовочка</button>
+<!-- Добавлен класс темы по умолчанию -->
+<body class="bg-dark m-0 p-0 theme-square-text">
 
-            <button class="btn-ribbon" id="menuExportJSON" style="color: #ffffff;">💾 Экспорт JSON</button>
-            
-            <!-- <button class="btn-ribbon" id="menuDuplicateBranch">Копировать...</button>
-            <button class="btn-ribbon" id="menuDuplicateBranch">Копировать ветку...</button> -->
-            <button class="btn-ribbon" id="menuShowSystemCurve" style="color: #ff9800;">📈 Характеристика системы</button>
-            
-            <!-- <button class="btn-ribbon" id="menuCreateRow_new_ob">Получить элементы</button> -->
-          </div>
-          <!-- <div class="ribbon-title">Ветка</div> -->
-        </div>
-        <!-- <div class="ribbon-section">
-          <div class="ribbon-btn-group">
-            <button class="btn-ribbon" id="menuCreateRow">Создать...</button>
-            <button class="btn-ribbon" id="menuDuplicateRow">Копировать...</button>
-          </div>
-          <div class="ribbon-title">Рядок</div>
-        </div> -->
-        <!-- <div class="ribbon-section wide-armatura">
-          <div class="ribbon-grid-armatura">
-            <button class="btn-ribbon" id="arm_valve">Узел управления...</button>
-            <button class="btn-ribbon" id="arm_gate">Задвижка/затвор...</button>
-            <button class="btn-ribbon" id="arm_check">Клапан обратный...</button>
-            <button class="btn-ribbon" id="arm_filter">Фильтр...</button>
-            <button class="btn-ribbon" id="arm_reg">Регулятор давления...</button>
-          </div>
-          <div class="ribbon-title">Трубопроводная арматура</div>
-        </div>-->
-        <div class="ribbon-section">
-          <div class="ribbon-btn-group">
-            <button class="btn-ribbon" id="src_tank">Резервуар...</button>
-            <button class="btn-ribbon" id="src_city">Параметры гор. водоснабж.</button>
-            <button class="btn-ribbon" id="src_pump">Насос...</button>
-          </div>
-          <div class="ribbon-title">Источники</div>
-        </div> 
-        <div class="ribbon-section">
-          <div class="ribbon-btn-group">
-            <button class="btn-ribbon" id="menuSceneSettings">Параметры сцены...</button>
-            <button class="btn-ribbon" id="menuRunCalc">Запуск расчета...</button>
-          </div>
-          <div class="ribbon-title">Расчет</div>
-        </div>
-        <div class="ribbon-section">
-          <div class="ribbon-btn-group">
-            <button class="btn-ribbon" id="menuShowGraph">📊 Граф сети...</button>
-            <button class="btn-ribbon" id="menuShowAutoConnections">⚡ Авто-связи...</button>
-          </div>
-          <div class="ribbon-title">Результаты</div>
-        </div>
+  <!-- =================================================================== -->
+  <!-- НОВЫЙ RIBBON С ВКЛАДКАМИ (Оригинальные ID кнопок сохранены!) -->
+  <!-- =================================================================== -->
+  <div class="ribbon-wrapper">
+    <div class="ribbon-logo">
+      <img src="ico/muu_sa.ico" alt="logo">
+    </div>
 
-        <div class="ribbon-section">
-          <div class="ribbon-btn-group">
-                    <span class="btn-ribbon">Ороситель</span>
-                    <select id="get_sprinkler">          
-                    </select>                
-          </div>
-          <span class="btn-ribbon">Давление у оросителя</span>
-          <input type="number" id="pressure_sprinkler" name="pressure" min="0" max="100" step="0.01" value="18">
-          <div class="ribbon-title">Выбор орсителя</div>
-          
-        </div>
-        <div class="ribbon-section">
-          <div class="ribbon-btn-group">
-            <button class="btn-ribbon" id="menuResetView">Сбросить вид</button>
-            <button class="btn-ribbon" id="menuToggleGrid">Сетка: Вкл/Выкл</button>
-            <button class="btn-ribbon" id="menuTopView">Вид сверху</button>
-            <button class="btn-ribbon" id="menuToggleCameraMode">Перспектива/Орто</button>
-            <button class="btn-ribbon" id="menuToggleConnectionPoints">Узлы: Вкл/Выкл</button>
-            <button class="btn-ribbon" id="menuToggleDiameters">Диаметры: Вкл/Выкл</button>
-            <!-- <button class="btn-ribbon" id="menuToggleTree" style="color: #ffffff; display: none;">📁 Дерево</button> -->
-          </div>
-          <div class="ribbon-title">Вид</div>
-        </div>
-        <div class="flex-grow-1" style="background-color: #0F1379;"></div>
+    <div class="ribbon-tabs">
+      <button class="ribbon-tab active" data-tab="tab-home">Главная</button>
+      <button class="ribbon-tab" data-tab="tab-sprinkler">Подбор оросителя</button>
+      <button class="ribbon-tab" data-tab="tab-pipeline">Трубопровод</button>
+      <button class="ribbon-tab" data-tab="tab-branch">Ветка</button>
+      <button class="ribbon-tab" data-tab="tab-sources">Источники</button>
+      <button class="ribbon-tab" data-tab="tab-calc">Расчет</button>
+      <button class="ribbon-tab" data-tab="tab-results">Результаты</button>
+      <button class="ribbon-tab" data-tab="tab-view">Вид</button>
+    </div>
+
+    <div class="ribbon-content-area">
+      <!-- Вкладка: Главная -->
+      <div class="ribbon-panel active" id="tab-home">
+        <button class="btn-ribbon" id="menuNew"><span class="btn-icon">📄</span><span>Новый</span></button>
+        <button class="btn-ribbon" id="menuOpen"><span class="btn-icon">📁</span><span>Открыть</span></button>
+        <button class="btn-ribbon" id="menuSave"><span class="btn-icon">💾</span><span>Сохранить</span></button>
+      </div>
+
+      <!-- Вкладка: Подбор оросителя -->
+      <div class="ribbon-panel" id="tab-sprinkler">
+        <button class="btn-ribbon" id="menuCreateSprinkler"><span class="btn-icon">🚿</span><span>Подобрать ороситель</span></button>
+        <button class="btn-ribbon" id="menuAdjustFlow"><span class="btn-icon">📏</span><span>Настроить расход</span></button>
+      </div>
+
+      <!-- Вкладка: Трубопровод -->
+      <div class="ribbon-panel" id="tab-pipeline">
+        <button class="btn-ribbon" id="menuCreatePipeline"><span class="btn-icon">🔧</span><span>Создать</span></button>
+        <button class="btn-ribbon" id="menuPipeline_Edit"><span class="btn-icon">✏️</span><span>Изменить</span></button>
+        <button class="btn-ribbon" id="menuSplitPipeline"><span class="btn-icon">✂️</span><span>Разбить</span></button>
+        <button class="btn-ribbon" id="delete_SplitPipeline"><span class="btn-icon">🗑️</span><span>Удалить</span></button>
+      </div>
+
+      <!-- Вкладка: Ветка -->
+      <div class="ribbon-panel" id="tab-branch">
+        <button class="btn-ribbon" id="menuCreateBranch"><span class="btn-icon">🌿</span><span>Создать</span></button>
+      </div>
+
+      <!-- Вкладка: Источники -->
+      <div class="ribbon-panel" id="tab-sources">
+        <button class="btn-ribbon" id="src_tank"><span class="btn-icon">🛢️</span><span>Резервуар</span></button>
+        <button class="btn-ribbon" id="src_city"><span class="btn-icon">🏙️</span><span>Параметры гор. водоснабж.</span></button>
+        <button class="btn-ribbon" id="src_pump"><span class="btn-icon">🚰</span><span>Насос</span></button>
+      </div>
+
+      <!-- Вкладка: Расчет -->
+      <div class="ribbon-panel" id="tab-calc">
+        <button class="btn-ribbon" id="Add_list_object"><span class="btn-icon">▶️</span><span>Расчет</span></button>
+        <button class="btn-ribbon" id="Check_3D" style="color: #09bd36;"><span class="btn-icon">✅</span><span>ПроCHECKовочка</span></button>
+        <button class="btn-ribbon" id="menuRunCalc"><span class="btn-icon">🚀</span><span>Запуск расчета</span></button>
+      </div>
+
+      <!-- Вкладка: Результаты -->
+      <div class="ribbon-panel" id="tab-results">
+        <button class="btn-ribbon" id="menuShowGraph"><span class="btn-icon">🕸️</span><span>Граф сети</span></button>
+        <button class="btn-ribbon" id="menuShowAutoConnections"><span class="btn-icon">📈</span><span>Характеристика H(Q)</span></button>
+        <button class="btn-ribbon" id="menuShowSystemCurve" style="color: #ff9800;"><span class="btn-icon">📊</span><span>Хар-ка системы</span></button>
+        <button class="btn-ribbon" id="menuExportJSON"><span class="btn-icon">💾</span><span>Экспорт JSON</span></button>
+      </div>
+
+      <!-- Вкладка: Вид -->
+      <div class="ribbon-panel" id="tab-view">
+        <button class="btn-ribbon" id="menuSceneSettings"><span class="btn-icon">⚙️</span><span>Параметры сцены</span></button>
+        <button class="btn-ribbon" id="menuResetView"><span class="btn-icon">🔄</span><span>Сбросить вид</span></button>
+        <button class="btn-ribbon" id="menuToggleGrid"><span class="btn-icon">📐</span><span>Сетка</span></button>
+        <button class="btn-ribbon" id="menuTopView"><span class="btn-icon">⬆️</span><span>Вид сверху</span></button>
+        <button class="btn-ribbon" id="menuToggleCameraMode"><span class="btn-icon">📷</span><span>Перспектива/Орто</span></button>
+        <button class="btn-ribbon" id="menuToggleConnectionPoints"><span class="btn-icon">🔵</span><span>Узлы</span></button>
+        <button class="btn-ribbon" id="menuToggleDiameters"><span class="btn-icon">⭕</span><span>Диаметры</span></button>
       </div>
     </div>
   </div>
-  <div id="projectInfo">
-    <div class="project-name" id="projectNameDisplay">Нет проекта</div>
-    <div class="project-path" id="projectPathDisplay"></div>
-  </div>
-  <!-- Кнопка + заголовок дерева -->
+
+  <!-- =================================================================== -->
+  <!-- ОРИГИНАЛЬНОЕ ДЕРЕВО ПОСТРОЕНИЯ (Восстановлено) -->
+  <!-- =================================================================== -->
   <div id="treeHeaderWrapper" class="tree-header-wrapper">
     <button id="floatingTreeBtn" class="floating-tree-btn" title="Дерево построения">📁</button>
     <span id="treeTitle" class="tree-title-text">Дерево построения</span>
   </div>
 
-  <!-- Само дерево (прозрачное) -->
   <div id="treePanel" class="tree-panel hidden">
     <div id="treeContainer"></div>
   </div>
+
+  <!-- =================================================================== -->
+  <!-- ОСТАЛЬНОЙ КОНТЕНТ ПРОЕКТА (Без изменений) -->
+  <!-- =================================================================== -->
+  <div id="projectInfo">
+    <div class="project-name" id="projectNameDisplay">Нет проекта</div>
+    <div class="project-path" id="projectPathDisplay"></div>
+  </div>
+
   <div id="ui">
     <input type="number" id="planeWidth" value="50" min="2" max="2000">
     <input type="number" id="planeDepth" value="50" min="2" max="2000">
     <input type="number" id="axesSizeInput" value="2" min="0.1" max="50" step="0.1">
   </div>
 
-
-
-
-
-<!-- ТЕСТ ДЯЛ СОЗДАНИЯ ПЕРЕМЕЩАЕМОГО ОКНА  -->
-
-<div id="move_window">
-  <div id="pipelineBuilder">
-    <div class="pipeline-header" id="pipelineDragHandle">
-      <span class="title">Построение трубопровода</span>
-      <!-- <span class="hint">⇲ перетащите</span> -->
+  <!-- МОДАЛЬНЫЕ ОКНА (Оставлены без изменений для совместимости) -->
+  <div id="move_window">
+    <div id="pipelineBuilder">
+      <div class="pipeline-header" id="pipelineDragHandle">
+        <span class="title">Построение трубопровода</span>
+      </div>
+      <div class="pipeline-body">
+        <div class="step">
+          <span>Координаты исходной точки:</span>
+          X<input type="number" id="pbCX" value="0" step="0.1" readonly>
+          Y<input type="number" id="pbCY" value="0" step="0.1" readonly>
+          Z<input type="number" id="pbCZ" value="0" step="0.1" readonly>
+        </div>
+        <div class="step">
+          <span>Ось трубопровода</span>
+          <button class="axis-btn" data-axis="x">X</button>
+          <button class="axis-btn active" data-axis="y">Y</button>
+          <button class="axis-btn" data-axis="z">Z</button>
+          <span style="margin-left:10px">Направление вдоль оси</span>
+          <button class="dir-btn active" data-dir="+">+</button>
+          <button class="dir-btn" data-dir="-">-</button>
+        </div> 
+        <div class="step">
+          <span>Длина, м</span>
+          <input type="number" id="pbLength" value="5" step="0.1" min="0.1" max="100">
+        </div>
+        <div class="step">
+          <span>Ось поворота</span>
+          <button class="axis-btn-rot" data-axis="x">X</button>
+          <button class="axis-btn-rot active" data-axis="y">Y</button>
+          <button class="axis-btn-rot" data-axis="z">Z</button>
+          <span style="margin-left:10px">Угол, град.</span>
+          <input type="number" id="pbAngle" value="0" step="10" min="-360" max="360">
+        </div>
+        <div class="step">
+          <span>Тип трубопровода</span>
+          <select id="get_tube_pipe"></select>                
+        </div>
+        <div class="step">
+          <span>Диаметр трубопровода DN</span>
+          <select id="pbDiameter"></select>
+        </div>
+        <div class="step">
+          <button class="confirm" id="pbConfirm">Создать</button>
+          <button class="cancel" id="pbCancel">Закрыть</button>
+        </div>
+      </div>
     </div>
-    <div class="pipeline-body">
-      <div class="step">
-        <span>Координаты исходной точки:</span>
-        X<input type="number" id="pbCX" value="0" step="0.1" readonly>
-        <!-- <span>X:</span><span id="pbCX"></span> -->
-        Y<input type="number" id="pbCY" value="0" step="0.1" readonly>
-        Z<input type="number" id="pbCZ" value="0" step="0.1" readonly>
-      </div>
-      <div class="step">
-        <span>Ось трубопровода</span>
-        <button class="axis-btn " data-axis="x">X</button>
-        <button class="axis-btn active" data-axis="y">Y</button>
-        <button class="axis-btn" data-axis="z">Z</button>
-        
-        <span style="margin-left:10px">Направление вдоль оси</span>
-        <button class="dir-btn active" data-dir="+">+</button>
-        <button class="dir-btn" data-dir="-">-</button>
-      </div> 
-      <div class="step">
-        <span>Длина, м</span>
-        <input type="number" id="pbLength" value="5" step="0.1" min="0.1" max="100">
-      </div>
-      <div class="step">
-        <span>Ось поворота</span>
-        <button class="axis-btn-rot" data-axis="x">X</button>
-        <button class="axis-btn-rot active" data-axis="y">Y</button>
-        <button class="axis-btn-rot" data-axis="z">Z</button>
-        
-        <span style="margin-left:10px">Угол, град.</span>
-        <input type="number" id="pbAngle" value="0" step="10" min="-360" max="360">
-      </div>
-      
-      <div class="step">
-        <span>Тип трубопровода</span>
-        <select id="get_tube_pipe">          
-        </select>                
-      </div>
-      <div class="step">
-        <span>Диаметр трубопровода DN</span>
-        <select id="pbDiameter">          
-        </select>
-      </div>
-        
-      <div class="step">
-        <button class="confirm" id="pbConfirm">Создать</button>
-        <!-- <button class="finish" id="pbFinish">Готово</button> -->
-        <button class="cancel" id="pbCancel">Закрыть</button>
-      </div>
-      <!-- <div class="pipeline-stats">
-        <div>Участков: <span id="pbSegmentCount">0</span></div>
-        <div>Длина: <span id="pbTotalLength">0.00</span> м</div>
-      </div> -->
-      <!-- <div id="pipelineSegmentsList"></div> -->
-    </div>
-  </div>
-</div>  
+  </div>  
 
-  <!-- <div id="toolbar">
-    <button id="resetViewBtn">Сброс вида</button>
-    <button id="toggleGridBtn">Сетка: Вкл</button>
-    <button id="topViewBtn">Вид сверху</button>
-    <button id="toggleConnectionPointsBtn">Узлы: Вкл</button>
-    <button id="toggleDiametersBtn">Диаметры: Вкл</button>
-  </div> -->
   <div id="newProjectModal" class="edit-modal">
     <div class="modal-content" style="width: 500px;">
       <h3>📁 Создание нового проекта</h3>
       <div class="modal-section">
         <h4>Выберите папку для проекта</h4>
         <div style="display: flex; gap: 8px; align-items: center;">
-          <input type="text" id="projectFolderPath" placeholder="Папка не выбрана"
-            style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" readonly>
-          <button id="selectFolderBtn"
-            style="padding: 8px 16px; background: #1976d2; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Выбрать
-            папку</button>
+          <input type="text" id="projectFolderPath" placeholder="Папка не выбрана" style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" readonly>
+          <button id="selectFolderBtn" style="padding: 8px 16px; background: #1976d2; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Выбрать папку</button>
         </div>
         <div class="warning" style="margin-top: 8px;">⚠️ В выбранной папке будет создана подпапка с именем проекта</div>
       </div>
       <div class="modal-section">
         <h4>Имя проекта</h4>
         <div class="modal-row" style="flex-direction: column; align-items: stretch;">
-          <input type="text" id="projectNameInput" placeholder="Введите имя проекта"
-            style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+          <input type="text" id="projectNameInput" placeholder="Введите имя проекта" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
         </div>
       </div>
       <div class="modal-buttons">
         <button class="btn-cancel" id="newProjectCancelBtn">Отмена</button>
-        <button class="btn-apply" id="newProjectCreateBtn">Создать проект</button>
+        <button class="btn-apply" id="newProjectCreateBtn">Создать</button>
       </div>
     </div>
   </div>
+
   <div id="sceneSettingsModal" class="edit-modal">
     <div class="modal-content">
       <h3>Настройки сцены...</h3>
       <div class="modal-section">
         <h4>Основание, м</h4>
-        <div class="modal-row"><label>Ширина X:</label><input type="number" id="scenePlaneWidth" value="100" min="2"
-            max="2000" step="1"></div>
-        <div class="modal-row"><label>Глубина Z:</label><input type="number" id="scenePlaneDepth" value="50" min="2"
-            max="2000" step="1"></div>
+        <div class="modal-row"><label>Ширина X:</label><input type="number" id="scenePlaneWidth" value="100" min="2" max="2000" step="1"></div>
+        <div class="modal-row"><label>Глубина Z:</label><input type="number" id="scenePlaneDepth" value="50" min="2" max="2000" step="1"></div>
       </div>
       <div class="modal-section">
         <h4>Размер осей, м</h4>
-        <div class="modal-row"><label>Размер:</label><input type="number" id="sceneAxesSize" value="2" min="0.1"
-            max="50" step="0.1"></div>
+        <div class="modal-row"><label>Размер:</label><input type="number" id="sceneAxesSize" value="2" min="0.1" max="50" step="0.1"></div>
       </div>
       <div class="modal-buttons">
         <button class="btn-cancel" id="sceneSettingsCancelBtn">Отмена</button>
@@ -278,15 +424,13 @@
       <div class="row-sides">
         <div class="row-side">
           <h5>Слева</h5>
-          <div class="spr-row"><input type="number" id="createRowLeftCount" min="0" max="30" value="3"><button
-              id="createRowUpdateLeftBtn">Обновить</button></div>
+          <div class="spr-row"><input type="number" id="createRowLeftCount" min="0" max="30" value="3"><button id="createRowUpdateLeftBtn">Обновить</button></div>
           <div class="segment-header"><span>#</span><span>Длина, м</span><span>DN</span></div>
           <div id="createRowLeftInputs"></div>
         </div>
         <div class="row-side right">
           <h5>Справа</h5>
-          <div class="spr-row"><input type="number" id="createRowRightCount" min="0" max="30" value="3"><button
-              id="createRowUpdateRightBtn">Обновить</button></div>
+          <div class="spr-row"><input type="number" id="createRowRightCount" min="0" max="30" value="3"><button id="createRowUpdateRightBtn">Обновить</button></div>
           <div class="segment-header"><span>#</span><span>Длина, м</span><span>DN</span></div>
           <div id="createRowRightInputs"></div>
         </div>
@@ -297,6 +441,7 @@
       </div>
     </div>
   </div>
+
   <div id="editModal" class="edit-modal">
     <div class="modal-content">
       <h3>Ветка №<span id="editBranchId"></span></h3>
@@ -308,22 +453,14 @@
       </div>
       <div class="modal-section">
         <h4>Поворот, град</h4>
-        <div class="modal-row"><label>X:</label><input type="number" id="editRotX" step="15" style="width:60px"><button
-            class="rot-btn" data-target="branch" data-axis="x" data-angle="90">+90</button><button class="rot-btn"
-            data-target="branch" data-axis="x" data-angle="-90">-90</button></div>
-        <div class="modal-row"><label>Y:</label><input type="number" id="editRotY" step="15" style="width:60px"><button
-            class="rot-btn" data-target="branch" data-axis="y" data-angle="90">+90</button><button class="rot-btn"
-            data-target="branch" data-axis="y" data-angle="-90">-90</button></div>
-        <div class="modal-row"><label>Z:</label><input type="number" id="editRotZ" step="15" style="width:60px"><button
-            class="rot-btn" data-target="branch" data-axis="z" data-angle="90">+90</button><button class="rot-btn"
-            data-target="branch" data-axis="z" data-angle="-90">-90</button></div>
-        <button id="editResetRotBtn"
-          style="width:100%;padding:4px;font-size:11px;background:#0f1379;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-top:6px">Сбросить</button>
+        <div class="modal-row"><label>X:</label><input type="number" id="editRotX" step="15" style="width:60px"><button class="rot-btn" data-target="branch" data-axis="x" data-angle="90">+90</button><button class="rot-btn" data-target="branch" data-axis="x" data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="editRotY" step="15" style="width:60px"><button class="rot-btn" data-target="branch" data-axis="y" data-angle="90">+90</button><button class="rot-btn" data-target="branch" data-axis="y" data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="editRotZ" step="15" style="width:60px"><button class="rot-btn" data-target="branch" data-axis="z" data-angle="90">+90</button><button class="rot-btn" data-target="branch" data-axis="z" data-angle="-90">-90</button></div>
+        <button id="editResetRotBtn" style="width:100%;padding:4px;font-size:11px;background:#0f1379;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-top:6px">Сбросить</button>
       </div>
       <div class="modal-section">
         <h4>Оросителей</h4>
-        <div class="spr-row"><input type="number" id="editSprCount" min="1" max="50" value="4"><button
-            id="editUpdateSprBtn">Обновить</button></div>
+        <div class="spr-row"><input type="number" id="editSprCount" min="1" max="50" value="4"><button id="editUpdateSprBtn">Обновить</button></div>
         <div class="segment-header"><span>#</span><span>Длина, м</span><span>DN</span></div>
         <div id="editSegmentInputs"></div>
         <div class="edit-total">📏 <span id="editTotalLength">0.00</span> м</div>
@@ -335,6 +472,7 @@
       </div>
     </div>
   </div>
+
   <div id="editRowModal" class="edit-modal">
     <div class="modal-content">
       <h3>Рядок №<span id="editRowId"></span></h3>
@@ -346,32 +484,20 @@
       </div>
       <div class="modal-section">
         <h4>Поворот (°)</h4>
-        <div class="modal-row"><label>X:</label><input type="number" id="rowEditRotX" step="15"
-            style="width:60px"><button class="rot-btn" data-target="row" data-axis="x"
-            data-angle="90">+90</button><button class="rot-btn" data-target="row" data-axis="x"
-            data-angle="-90">-90</button></div>
-        <div class="modal-row"><label>Y:</label><input type="number" id="rowEditRotY" step="15"
-            style="width:60px"><button class="rot-btn" data-target="row" data-axis="y"
-            data-angle="90">+90</button><button class="rot-btn" data-target="row" data-axis="y"
-            data-angle="-90">-90</button></div>
-        <div class="modal-row"><label>Z:</label><input type="number" id="rowEditRotZ" step="15"
-            style="width:60px"><button class="rot-btn" data-target="row" data-axis="z"
-            data-angle="90">+90</button><button class="rot-btn" data-target="row" data-axis="z"
-            data-angle="-90">-90</button></div>
-        <button id="rowEditResetRotBtn"
-          style="width:100%;padding:4px;font-size:11px;background:#0f1379;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-top:6px">Сбросить</button>
+        <div class="modal-row"><label>X:</label><input type="number" id="rowEditRotX" step="15" style="width:60px"><button class="rot-btn" data-target="row" data-axis="x" data-angle="90">+90</button><button class="rot-btn" data-target="row" data-axis="x" data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="rowEditRotY" step="15" style="width:60px"><button class="rot-btn" data-target="row" data-axis="y" data-angle="90">+90</button><button class="rot-btn" data-target="row" data-axis="y" data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="rowEditRotZ" step="15" style="width:60px"><button class="rot-btn" data-target="row" data-axis="z" data-angle="90">+90</button><button class="rot-btn" data-target="row" data-axis="z" data-angle="-90">-90</button></div>
+        <button id="rowEditResetRotBtn" style="width:100%;padding:4px;font-size:11px;background:#0f1379;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-top:6px">Сбросить</button>
       </div>
       <div class="modal-section">
         <h4>Слева</h4>
-        <div class="spr-row"><input type="number" id="rowEditLeftCount" min="0" max="30" value="3"><button
-            id="rowEditUpdateLeftBtn">Обновить</button></div>
+        <div class="spr-row"><input type="number" id="rowEditLeftCount" min="0" max="30" value="3"><button id="rowEditUpdateLeftBtn">Обновить</button></div>
         <div class="segment-header"><span>#</span><span>Длина, м</span><span>DN</span></div>
         <div id="rowEditLeftInputs"></div>
       </div>
       <div class="modal-section">
         <h4>Справа</h4>
-        <div class="spr-row"><input type="number" id="rowEditRightCount" min="0" max="30" value="3"><button
-            id="rowEditUpdateRightBtn">Обновить</button></div>
+        <div class="spr-row"><input type="number" id="rowEditRightCount" min="0" max="30" value="3"><button id="rowEditUpdateRightBtn">Обновить</button></div>
         <div class="segment-header"><span>#</span><span>Длина, м</span><span>DN</span></div>
         <div id="rowEditRightInputs"></div>
       </div>
@@ -382,6 +508,7 @@
       </div>
     </div>
   </div>
+
   <div id="editPipelineModal" class="edit-modal">
     <div class="modal-content">
       <h3>Трубопровод №<span id="editPipeId"></span></h3>
@@ -394,28 +521,16 @@
       </div>
       <div class="modal-section">
         <h4>Поворот, град</h4>
-        <div class="modal-row"><label>X:</label><input type="number" id="pipeEditRotX" step="15"
-            style="width:60px"><button class="rot-btn" data-target="pipe" data-axis="x"
-            data-angle="90">+90</button><button class="rot-btn" data-target="pipe" data-axis="x"
-            data-angle="-90">-90</button></div>
-        <div class="modal-row"><label>Y:</label><input type="number" id="pipeEditRotY" step="15"
-            style="width:60px"><button class="rot-btn" data-target="pipe" data-axis="y"
-            data-angle="90">+90</button><button class="rot-btn" data-target="pipe" data-axis="y"
-            data-angle="-90">-90</button></div>
-        <div class="modal-row"><label>Z:</label><input type="number" id="pipeEditRotZ" step="15"
-            style="width:60px"><button class="rot-btn" data-target="pipe" data-axis="z"
-            data-angle="90">+90</button><button class="rot-btn" data-target="pipe" data-axis="z"
-            data-angle="-90">-90</button></div>
-        <button id="pipeEditResetRotBtn"
-          style="width:100%;padding:4px;font-size:11px;background:#0f1379;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-top:6px">Сбросить</button>
+        <div class="modal-row"><label>X:</label><input type="number" id="pipeEditRotX" step="15" style="width:60px"><button class="rot-btn" data-target="pipe" data-axis="x" data-angle="90">+90</button><button class="rot-btn" data-target="pipe" data-axis="x" data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="pipeEditRotY" step="15" style="width:60px"><button class="rot-btn" data-target="pipe" data-axis="y" data-angle="90">+90</button><button class="rot-btn" data-target="pipe" data-axis="y" data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="pipeEditRotZ" step="15" style="width:60px"><button class="rot-btn" data-target="pipe" data-axis="z" data-angle="90">+90</button><button class="rot-btn" data-target="pipe" data-axis="z" data-angle="-90">-90</button></div>
+        <button id="pipeEditResetRotBtn" style="width:100%;padding:4px;font-size:11px;background:#0f1379;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-top:6px">Сбросить</button>
       </div>
       <div class="modal-section">
         <h4>Участки</h4>
-        <div class="segment-header" style="grid-template-columns:30px 1fr 80px 30px"><span>№</span><span>Длина,
-            м</span><span>DN</span><span></span></div>
+        <div class="segment-header" style="grid-template-columns:30px 1fr 80px 30px"><span>№</span><span>Длина, м</span><span>DN</span><span></span></div>
         <div id="pipeEditSegments"></div>
-        <div class="edit-total"><span id="pipeEditTotalLength">0.00</span> м | Участков: <span
-            id="pipeEditSegCount">0</span></div>
+        <div class="edit-total"><span id="pipeEditTotalLength">0.00</span> м | Участков: <span id="pipeEditSegCount">0</span></div>
         <div class="pipe-edit-actions"><button id="pipeEditAddSegBtn">Добавить участок</button></div>
       </div>
       <div class="modal-buttons">
@@ -426,38 +541,22 @@
     </div>
   </div>
 
-
-  
-  
   <div id="PipelineModal_Edit">
     <div class="pipeline-header" id="pipelineDragHandle">
       <span class="title">Редактирование трубопровода</span>
-      <!-- <span class="hint">⇲ перетащите</span> -->
     </div>
     <div class="pipeline-body"> 
-      <div class="step">
-        <span>Трубопровод:</span>
-        <span id="number_pipe_edit"></span>                
-      </div>
-      <div class="step">
-        <span>Тип трубопровода:</span>
-        <span id="type_pipe_edit"></span>                
-      </div>
-      <div class="step">
-        <span>Диаметр трубопровода:</span>
-        <span id="DN_pipe_edit"></span>                
-      </div>
-      <div class="step">
-        <span>Длина редактируемого трубопровода:</span>
-        <span id="Length_pipe_edit">              
-      </div>            
+      <div class="step"><span>Трубопровод:</span><span id="number_pipe_edit"></span></div>
+      <div class="step"><span>Тип трубопровода:</span><span id="type_pipe_edit"></span></div>
+      <div class="step"><span>Диаметр трубопровода:</span><span id="DN_pipe_edit"></span></div>
+      <div class="step"><span>Длина редактируемого трубопровода:</span><span id="Length_pipe_edit"></span></div>            
       <div class="step">
         <span>Изменить тип трубопровода</span>
         <select id="get_tube_pipe_edit"></select>                
       </div>
       <div class="step">
-          <span>Изменить диаметр трубопровода DN</span>
-          <select id="pbDiameter_edit"></select>
+        <span>Изменить диаметр трубопровода DN</span>
+        <select id="pbDiameter_edit"></select>
       </div>
       <div class="step">
         <span>Изменить длину трубопровода</span>
@@ -473,7 +572,6 @@
   <div id="createBranchModal">
     <div class="pipeline-header" id="pipelineDragHandle">
       <span class="title">Создание ветки оросителей</span>
-      <!-- <span class="hint">⇲ перетащите</span> -->
     </div>
     <div class="pipeline-body">      
       <div class="step">
@@ -487,18 +585,15 @@
         <button class="axis-btn" data-axis="x">X</button>
         <button class="axis-btn active" data-axis="y">Y</button>
         <button class="axis-btn" data-axis="z">Z</button>
-        
         <span style="margin-left:10px">Направление вдоль оси</span>
         <button class="dir-btn active" data-dir="+">+</button>
         <button class="dir-btn" data-dir="-">-</button>
       </div>
-      
       <div class="step">
         <span>Ось поворота</span>
         <button class="axis-btn-rot" data-axis="x">X</button>
         <button class="axis-btn-rot active" data-axis="y">Y</button>
         <button class="axis-btn-rot" data-axis="z">Z</button>
-        
         <span style="margin-left:10px">Угол, град.</span>
         <input type="number" id="pbAngle_branch" value="0" step="10" min="-360" max="360">
       </div>
@@ -510,27 +605,11 @@
         <span>Количество оросителей</span>
         <input type="number" id="createBranchSprCount" min="1" max="50" value="1" step="1">
       </div>
-      
       <div id="myTabContent" style="background-color: #fff;"></div>
-      
-
-    
       <div class="step">
         <button class="confirm" id="createBranchApplyBtn">Применить</button>        
         <button class="cancel" id="createBranchCancelBtn">Отмена</button> 
-        <!-- <button class="btn-apply" id="createBranchApplyBtn">Создать</button>
-        <button class="btn-cancel" id="createBranchCancelBtn">Отмена</button>         -->
       </div>
-
-        <!-- <span>Направление оси трубопровода</span>
-        <button class="axis-btn " data-axis="x">X</button>
-        <button class="axis-btn active" data-axis="y">Y</button>
-        <button class="axis-btn" data-axis="z">Z</button>
-        
-        <div class="modal-buttons">
-        <button class="btn-apply" id="createBranchApplyBtn">Создать</button>
-        <button class="btn-cancel" id="createBranchCancelBtn">Отмена</button>        
-      </div> -->
     </div>
   </div>
 
@@ -541,37 +620,16 @@
       <div class="step">
         <span>Количество участков:</span>
         <input type="number" id="pipe_break" value="2" min="2" step="1">
-        <!-- Y<input type="number" id="pbCY" value="0" step="0.1">
-        Z<input type="number" id="pbCZ" value="0" step="0.1"> -->
       </div>
       <div class="modal-buttons">
         <button class="confirm" id="splitApplyBtn">Разбить</button>        
         <button class="cancel" id="splitCancelBtn">Отмена</button>
-        <!-- <button class="btn-cancel" id="splitCancelBtn">Отмена</button>
-        <button class="btn-apply" id="splitApplyBtn">Разбить</button> -->
       </div>
     </div>
   </div>
 
-  <!-- <div id="splitPipelineModal" class="edit-modal">
-    <div class="pipeline-header" id="splitPipeline_brok">
-      <span class="title">Разбиение трубопровода</span>      
-    </div>
-    <div class="pipeline-body">
-      <div class="step">
-        <span>Трубопровод:<span id="number_pipe_break"></span></span>        
-      </div>      
-      <div class="step">
-        <button class="confirm" id="splitApplyBtn">Разбить</button>        
-        <button class="cancel" id="splitCancelBtn">Отмена</button>
-      </div>      
-    </div>            
-  </div> -->
-
-
   <div id="splitSegmentModal" class="edit-modal">
     <div class="modal-content">
-      
       <h3>Разбить сегмент #<span id="splitSegIndex"></span> трубопровода №<span id="splitSegPipelineId"></span></h3>
       <div class="modal-section" style="background:#e3f2fd;border:1px solid #90caf9">
         <h4 style="color:#1565c0">📊 Информация</h4>
@@ -580,19 +638,13 @@
       </div>
       <div class="modal-section">
         <h4>Параметры</h4>
-        <div class="modal-row"><label>Участков:</label><input type="number" id="splitSegCountInput" min="1" max="50"
-            value="2" style="width:60px"><button id="splitSegUpdateBtn"
-            style="padding:4px 10px;font-size:11px;background:#1976d2;color:#fff;border:none;border-radius:3px;cursor:pointer">Обновить</button><button
-            id="splitSegEqualBtn"
-            style="padding:4px 10px;font-size:11px;background:#ff9800;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-left:4px">Равномерно</button>
-        </div>
+        <div class="modal-row"><label>Участков:</label><input type="number" id="splitSegCountInput" min="1" max="50" value="2" style="width:60px"><button id="splitSegUpdateBtn" style="padding:4px 10px;font-size:11px;background:#1976d2;color:#fff;border:none;border-radius:3px;cursor:pointer">Обновить</button><button id="splitSegEqualBtn" style="padding:4px 10px;font-size:11px;background:#ff9800;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-left:4px">Равномерно</button></div>
       </div>
       <div class="modal-section">
         <h4>Участки</h4>
         <div class="segment-header"><span>#</span><span>Длина, м</span><span>⌀ DN</span></div>
         <div id="splitSegInputs"></div>
-        <div class="edit-total">📏 Сумма: <span id="splitSegSumLength">0.00</span> м | <span id="splitSegDiffInfo"
-            style="color:#d32f2f"></span></div>
+        <div class="edit-total">📏 Сумма: <span id="splitSegSumLength">0.00</span> м | <span id="splitSegDiffInfo" style="color:#d32f2f"></span></div>
       </div>
       <div class="warning" id="splitSegWarning" style="display:none">⚠️ Сумма не совпадает</div>
       <div class="modal-buttons">
@@ -601,43 +653,28 @@
       </div>
     </div>
   </div>
+
   <div id="editValveModal" class="edit-modal">
     <div class="modal-content">
       <h3>Узел управления №<span id="editValveId"></span></h3>
       <div class="modal-section" style="background:#fff3e0;border:1px solid #ffcc80">
         <h4 style="color:#e65100">Положение узла управления</h4>
-        <div class="modal-row"><label>X:</label><input type="number" id="valveEditPosX" step="0.1" style="width:100px">
-        </div>
-        <div class="modal-row"><label>Y:</label><input type="number" id="valveEditPosY" step="0.1" style="width:100px">
-        </div>
-        <div class="modal-row"><label>Z:</label><input type="number" id="valveEditPosZ" step="0.1" style="width:100px">
-        </div>
+        <div class="modal-row"><label>X:</label><input type="number" id="valveEditPosX" step="0.1" style="width:100px"></div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="valveEditPosY" step="0.1" style="width:100px"></div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="valveEditPosZ" step="0.1" style="width:100px"></div>
         <div class="warning">Изменение положения сдвинет весь узел управления</div>
       </div>
       <div class="modal-section">
         <h4>Параметры</h4>
-        <div class="modal-row"><label>Длина:</label><input type="number" id="valveEditLength" step="0.1" min="0.1"
-            max="10" style="width:100px"><span style="margin-left:10px">м</span></div>
-        <div class="modal-row"><label>Диаметр:</label><input type="number" id="valveEditDiameter" step="1" min="15"
-            max="400" style="width:100px"><span style="margin-left:10px">мм</span></div>
+        <div class="modal-row"><label>Длина:</label><input type="number" id="valveEditLength" step="0.1" min="0.1" max="10" style="width:100px"><span style="margin-left:10px">м</span></div>
+        <div class="modal-row"><label>Диаметр:</label><input type="number" id="valveEditDiameter" step="1" min="15" max="400" style="width:100px"><span style="margin-left:10px">мм</span></div>
       </div>
       <div class="modal-section">
         <h4>Поворот, град</h4>
-        <div class="modal-row"><label>X:</label><input type="number" id="valveEditRotX" step="15"
-            style="width:60px"><button class="rot-btn" data-target="valve" data-axis="x"
-            data-angle="90">+90</button><button class="rot-btn" data-target="valve" data-axis="x"
-            data-angle="-90">-90</button></div>
-        <div class="modal-row"><label>Y:</label><input type="number" id="valveEditRotY" step="15"
-            style="width:60px"><button class="rot-btn" data-target="valve" data-axis="y"
-            data-angle="90">+90</button><button class="rot-btn" data-target="valve" data-axis="y"
-            data-angle="-90">-90</button></div>
-        <div class="modal-row"><label>Z:</label><input type="number" id="valveEditRotZ" step="15"
-            style="width:60px"><button class="rot-btn" data-target="valve" data-axis="z"
-            data-angle="90">+90</button><button class="rot-btn" data-target="valve" data-axis="z"
-            data-angle="-90">-90</button></div>
-        <button id="valveEditResetRotBtn"
-          style="width:100%;padding:4px;font-size:11px;background:#0f1379;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-top:6px">Сбросить
-          поворот</button>
+        <div class="modal-row"><label>X:</label><input type="number" id="valveEditRotX" step="15" style="width:60px"><button class="rot-btn" data-target="valve" data-axis="x" data-angle="90">+90</button><button class="rot-btn" data-target="valve" data-axis="x" data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Y:</label><input type="number" id="valveEditRotY" step="15" style="width:60px"><button class="rot-btn" data-target="valve" data-axis="y" data-angle="90">+90</button><button class="rot-btn" data-target="valve" data-axis="y" data-angle="-90">-90</button></div>
+        <div class="modal-row"><label>Z:</label><input type="number" id="valveEditRotZ" step="15" style="width:60px"><button class="rot-btn" data-target="valve" data-axis="z" data-angle="90">+90</button><button class="rot-btn" data-target="valve" data-axis="z" data-angle="-90">-90</button></div>
+        <button id="valveEditResetRotBtn" style="width:100%;padding:4px;font-size:11px;background:#0f1379;color:#fff;border:none;border-radius:3px;cursor:pointer;margin-top:6px">Сбросить поворот</button>
       </div>
       <div class="modal-buttons">
         <button class="btn-cancel" id="valveEditCancelBtn">Отмена</button>
@@ -646,16 +683,15 @@
       </div>
     </div>
   </div>
+
   <div id="networkGraphModal" class="edit-modal">
     <div class="modal-content" style="width:90vw;max-width:1200px;height:85vh;display:flex;flex-direction:column">
       <h3>📊 Граф сети</h3>
-      <div
-        style="display:flex;gap:8px;margin-bottom:10px;align-items:center;border-bottom:1px solid #ddd;padding-bottom:8px">
+      <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;border-bottom:1px solid #ddd;padding-bottom:8px">
         <button id="graphTabSchema" class="graph-tab active">🗺️ Схема</button>
         <button id="graphTabTable" class="graph-tab">📋 Таблица</button>
         <button id="graphTabExport" class="graph-tab">💾 Экспорт</button>
-        <span style="margin-left:auto;font-size:11px;color:#666">Узлов: <strong id="graphNodeCount">0</strong> | Рёбер:
-          <strong id="graphEdgeCount">0</strong></span>
+        <span style="margin-left:auto;font-size:11px;color:#666">Узлов: <strong id="graphNodeCount">0</strong> | Рёбер: <strong id="graphEdgeCount">0</strong></span>
       </div>
       <div id="graphSchemaView" class="graph-view active" style="display:flex;flex-direction:column;flex:1">
         <div style="position:relative;flex:1;display:flex;flex-direction:column">
@@ -665,8 +701,7 @@
             <button id="graphZoomReset" class="graph-ctrl-btn">🏠</button>
             <button id="graphZoomFit" class="graph-ctrl-btn">⊞</button>
           </div>
-          <div
-            style="position:absolute;bottom:8px;right:8px;z-index:5;background:rgba(255,255,255,.9);padding:3px 8px;border-radius:4px;font-size:10px;color:#666;border:1px solid #ddd">
+          <div style="position:absolute;bottom:8px;right:8px;z-index:5;background:rgba(255,255,255,.9);padding:3px 8px;border-radius:4px;font-size:10px;color:#666;border:1px solid #ddd">
             Масштаб: <strong id="graphZoomLevel">100%</strong>
           </div>
           <svg id="graphSvg" style="width:100%;flex:1;background:#fafafa;border:1px solid #ddd;border-radius:4px">
@@ -674,8 +709,7 @@
           </svg>
         </div>
         <div style="margin-top:8px;font-size:11px;color:#666;display:flex;gap:16px;flex-wrap:wrap">
-          <span>🔵 Трубопровод</span><span>🟢 Ветка</span><span>🟠 Рядок</span><span>🔗 Привязка</span><span
-            style="color:#ff9800">⚡ Авто</span>
+          <span>🔵 Трубопровод</span><span>🟢 Ветка</span><span>🟠 Рядок</span><span>🔗 Привязка</span><span style="color:#ff9800">⚡ Авто</span>
         </div>
       </div>
       <div id="graphTableView" class="graph-view" style="flex:1;overflow:hidden">
@@ -712,11 +746,8 @@
       <div id="graphExportView" class="graph-view" style="flex:1;overflow:hidden">
         <div style="display:flex;flex-direction:column;height:100%">
           <h4 style="font-size:12px;margin-bottom:6px">JSON</h4>
-          <textarea id="graphJsonOutput" readonly
-            style="width:100%;flex:1;font-family:monospace;font-size:10px;padding:6px;border:1px solid #ddd;border-radius:4px;resize:none"></textarea>
-          <button id="graphCopyJson"
-            style="margin-top:4px;padding:4px 10px;font-size:11px;background:#1976d2;color:#fff;border:none;border-radius:3px;cursor:pointer">📋
-            Копировать</button>
+          <textarea id="graphJsonOutput" readonly style="width:100%;flex:1;font-family:monospace;font-size:10px;padding:6px;border:1px solid #ddd;border-radius:4px;resize:none"></textarea>
+          <button id="graphCopyJson" style="margin-top:4px;padding:4px 10px;font-size:11px;background:#1976d2;color:#fff;border:none;border-radius:3px;cursor:pointer">📋 Копировать</button>
         </div>
       </div>
       <div class="modal-buttons">
@@ -726,9 +757,11 @@
       </div>
     </div>
   </div>
+
   <canvas id="renderCanvas"></canvas>
   <div id="status"></div>
 
+  <!-- Все оригинальные скрипты проекта -->
   <script src="state.js"></script>
   <script src="engine.js"></script>
   <script src="factory.js"></script>
@@ -741,7 +774,7 @@
   <script src="modules/split-manager.js"></script>
   <script src="modules/network-graph.js"></script>
   <script src="modules/visual-effects.js"></script>
-  <script src="modules/armature.js"></script>  <!-- ← ДОБАВИТЬ ЭТУ СТРОКУ -->
+  <script src="modules/armature.js"></script>
   <script src="modules/input-handler.js"></script>
   <script src="modules/ui-app.js"></script>
   <script src="api_module.js"></script>
@@ -750,68 +783,64 @@
   <script src="charts.js"></script>
   
   <script>
- 
-  // import { User } from './modules/user.js'
-  // const user1 = new User('Алексей', 25);
-  // alert(user1.age);
-  addEventListener('load', () => {
-    if (typeof THREE === 'undefined') return;
-    setTimeout(() => {
-        UI.init(); // Здесь уже вызывается Engine.init()
-        Engine.animate();
-        const loadingEl = document.getElementById('loading');
-        if (loadingEl) loadingEl.classList.add('hidden');
-        Utils.showStatus('Готов');
-    }, 200);
-});
+    // Оригинальная инициализация
+    addEventListener('load', () => {
+      if (typeof THREE === 'undefined') return;
+      setTimeout(() => {
+          if (typeof UI !== 'undefined' && UI.init) UI.init(); 
+          if (typeof Engine !== 'undefined' && Engine.animate) Engine.animate();
+          const loadingEl = document.getElementById('loading');
+          if (loadingEl) loadingEl.classList.add('hidden');
+          if (typeof Utils !== 'undefined') Utils.showStatus('Готов');
+      }, 200);
+    });
 
-// async function gfgfdgfd() {
+    // ===================================================================
+    // ЛОГИКА НОВОГО ИНТЕРФЕЙСА (Вкладки + Оригинальное Дерево)
+    // ===================================================================
+    
+    // 1. Переключение вкладок Ribbon
+    const ribbonTabs = document.querySelectorAll('.ribbon-tab');
+    const ribbonPanels = document.querySelectorAll('.ribbon-panel');
 
-//   const t = await getTubeTypes() 
-//   console.log("ttttttttttttttttttttt",t)
-// }
+    ribbonTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        ribbonTabs.forEach(t => t.classList.remove('active'));
+        ribbonPanels.forEach(p => p.classList.remove('active'));
+        
+        tab.classList.add('active');
+        const targetPanel = document.getElementById(tab.dataset.tab);
+        if (targetPanel) targetPanel.classList.add('active');
+      });
+    });
 
-// gfgfdgfd(); 
-// getTubeTypes();
+    // 2. Логика ОРИГИНАЛЬНОЙ кнопки дерева
+    const floatingTreeBtn = document.getElementById('floatingTreeBtn');
+    const treePanel = document.getElementById('treePanel');
+    const treeTitle = document.getElementById('treeTitle');
+    let isTreeVisible = false;
 
-
-
-  // document.getElementById('menuCreateRow_new_ob').addEventListener('click', function() { 
-      
-  //   // getTubeTypes()
-  //   // .then(types => {
-  //   //   console.log('Тип трубы:', types[1].name);
-  //   //   // обновляешь DOM
-  //   // })
-  //   // .catch(err => {
-  //   //   console.error(err);
-  //   // });
-
-  //   getTube(1)
-  //   .then(types => {
-  //     console.log('Тип трубы:', types[1].name);
-  //     // обновляешь DOM
-  //   })
-  //   .catch(err => {
-  //     console.error(err);
-  //   });
-
-  //   let t =[];
-  //   Engine.scene.traverse((child) => {
-  //       // Проверяем, является ли это мешем (3D-моделью с геометрией)
-  //       if (child) {
-  //           // console.log('Найден меш: child.name);
-  //           t.push(`ОбЪект: ${child.name} тип ${child.type}\n ID ${child.id}\n`)
-  //       }
-  //   });
-  //   alert(t);
-  //   // // let t1 =[]
-  //   // // for (let o of STATE.objects){
-  //   // //   t1.push(`ОбЪект: ${o.id} тип ${o.type}\n ID ${o.id}`);
-  //   // // }
-  //   // alert(t1);
-  // });
-
+    if (floatingTreeBtn) {
+      floatingTreeBtn.addEventListener('click', () => {
+        isTreeVisible = !isTreeVisible;
+        if (isTreeVisible) {
+          treePanel.classList.remove('hidden');
+          floatingTreeBtn.classList.add('active');
+          treeTitle.classList.add('visible');
+          
+          // Вызываем вашу СУЩЕСТВУЮЩУЮ функцию обновления дерева из tree.js / new.js
+          if (typeof updateTreeUI === 'function') {
+            updateTreeUI();
+          } else if (typeof buildTree === 'function') {
+            buildTree(true);
+          }
+        } else {
+          treePanel.classList.add('hidden');
+          floatingTreeBtn.classList.remove('active');
+          treeTitle.classList.remove('visible');
+        }
+      });
+    }
   </script> 
 
   <!-- Затемняющий фон для модального окна -->
@@ -824,7 +853,6 @@
       <span id="closeChartBtn" class="chart-modal-close">&times;</span>
     </div>
     <div class="chart-modal-body">
-      <!-- Сюда Chart.js отрисует график -->
       <canvas id="systemCurveCanvas"></canvas>
     </div>
     <div class="chart-modal-footer">
@@ -832,11 +860,6 @@
       <button class="btn-cancel" id="closeChartFooterBtn">Закрыть</button>
     </div>
   </div>
-  <!-- Плавающая кнопка дерева -->
-  <button id="floatingTreeBtn" class="floating-tree-btn" title="Дерево построения">
-    📁
-  </button>
 
 </body>
-
 </html>
