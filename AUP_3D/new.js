@@ -37,6 +37,7 @@ function Add_data_base () {
             // const properties = child.add_list();            
         }       
     });
+    Data_base.pressure_sprinkler = Number(document.getElementById("pressure_sprinkler").value)
     // Data_base.push(Node);
     // Data_base.push(Edge);
     console.log("Data_base для отправки на бэкэнд", Data_base)
@@ -401,10 +402,12 @@ function Check_CreateBranch(){
     const sprCountInput = document.getElementById("createBranchSprCount");
     sprCountInput.addEventListener("input", function() {
         let Count = parseFloat(document.getElementById("createBranchSprCount").value);        
-        const tabContent = document.getElementById('myTabContent');                
+        const tabContent = document.getElementById('myTabContent');
+        const tybe_type = document.getElementById("get_tube_pipe_sprinkler");                
         tabContent.innerHTML = html_branch_content(Count);        
         for (let i = 0; i < Count; i++) {
-            get_load_pipe("get_tube_pipe_sprinkler", `pbDiameter_sprinkler_${i}`);            
+            // get_load_pipe("get_tube_pipe_sprinkler", `pbDiameter_sprinkler_${i}`);   
+            get_load_pbDiameter(tybe_type.value, `pbDiameter_sprinkler_${i}`);         
             document.getElementById("get_tube_pipe_sprinkler").addEventListener("change", (event) => {
                 get_load_pbDiameter(event.target.value, `pbDiameter_sprinkler_${i}`);   
             });

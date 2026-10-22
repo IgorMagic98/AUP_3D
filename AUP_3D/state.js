@@ -85,7 +85,9 @@ const STATE = {
         isPanning: false, lastMouseX: 0, lastMouseY: 0,
         minScale: .1, maxScale: 5, wheelStep: .1
     },
-    project: { name: null, folderHandle: null, projectFolderHandle: null }
+    project: { name: null, folderHandle: null, projectFolderHandle: null },
+    sprinkler_kv: null,
+    pipe_array: {},
 };
 
 
