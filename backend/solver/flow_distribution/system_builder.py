@@ -41,7 +41,7 @@ class HydraulicSystemBuilder:
     def __init__(self, json_data):
         # Исходные данные из Three.js / веб-интерфейса
         self.data = json_data
-
+        
         # --------------------------------------------------------------------
         # СЛОВАРИ СООТВЕТСТВИЯ UUID <-> ИНДЕКС
         # --------------------------------------------------------------------
@@ -100,7 +100,7 @@ class HydraulicSystemBuilder:
         self.residuals_fun = None
 
         # Целевое минимальное давление на оросителях
-        self.pressure_target = DEFAULT_PRESSURE_TARGET
+        self.pressure_target = json_data['pressure_sprinkler']
 
     # =========================================================================
     # МЕТОД 1: ПОСТРОЕНИЕ ГРАФА СЕТИ
@@ -206,7 +206,7 @@ class HydraulicSystemBuilder:
         # ЦЕЛЕВОЕ ДАВЛЕНИЕ ИЗ КОРНЯ JSON
         # --------------------------------------------------------------------
         self.pressure_target = float(
-            self.data.get('PRESSURE_TARGET', DEFAULT_PRESSURE_TARGET)
+            self.data.get('PRESSURE_TARGET', self.pressure_target)
         )
 
         # --------------------------------------------------------------------
