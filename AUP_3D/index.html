@@ -247,12 +247,12 @@
 
       <!-- Вкладка: Подбор оросителя -->
       <div class="ribbon-panel" id="tab-sprinkler">
-        <button class="btn-ribbon" id="menuCreateSprinkler"><span class="btn-icon">🚿</span><span>Подобрать ороситель</span></button>
-        <button class="btn-ribbon" id="menuAdjustFlow"><span class="btn-icon">📏</span><span>Настроить расход</span></button>
+        <!-- <button class="btn-ribbon" id="menuCreateSprinkler"><span class="btn-icon">🚿</span><span>Подобрать ороситель</span></button>
+        <button class="btn-ribbon" id="menuAdjustFlow"><span class="btn-icon">📏</span><span>Настроить расход</span></button> -->
 
         <span class="btn-ribbon">Ороситель</span>
         <select id="get_sprinkler"></select>                
-        <span class="btn-ribbon">Давление у оросителя</span>
+        <span class="btn-ribbon">Давление</span>
         <input type="number" id="pressure_sprinkler" name="pressure" min="0" max="100" step="0.01" value="18">
 
       </div>
@@ -288,8 +288,9 @@
       <div class="ribbon-panel" id="tab-results">
         <button class="btn-ribbon" id="menuShowGraph"><span class="btn-icon">🕸️</span><span>Граф сети</span></button>
         <button class="btn-ribbon" id="menuShowAutoConnections"><span class="btn-icon">📈</span><span>Характеристика H(Q)</span></button>
-        <button class="btn-ribbon" id="menuShowSystemCurve" style="color: #ff9800;"><span class="btn-icon">📊</span><span>Хар-ка системы</span></button>
+        <button class="btn-ribbon" id="menuShowSystemCurve" style="color: #ff9800;"><span class="btn-icon">📊</span><span>Характеристика H(Q)</span></button>
         <button class="btn-ribbon" id="menuExportJSON"><span class="btn-icon">💾</span><span>Экспорт JSON</span></button>
+        
       </div>
 
       <!-- Вкладка: Вид -->
@@ -855,15 +856,18 @@
   <!-- Само модальное окно с графиком -->
   <div id="chartModal" class="chart-modal">
     <div class="chart-modal-header">
-      <h4>📈 Гидравлическая характеристика системы</h4>
-      <span id="closeChartBtn" class="chart-modal-close">&times;</span>
+      <h4>Гидравлическая характеристика системы</h4>
+      <div class = "chart-modal-controls">
+        <button id="toggleChartFullscreenBtn" class="chart-modal-fullscreen-btn" title="На весь экран">⛶</button>
+        <span id="closeChartBtn" class="chart-modal-close">&times;</span>
+      </div>
     </div>
     <div class="chart-modal-body">
       <canvas id="systemCurveCanvas"></canvas>
     </div>
     <div class="chart-modal-footer">
       <button class="btn-apply" id="updateChartBtn">🔄 Обновить по данным расчета</button>
-      <button class="btn-cancel" id="closeChartFooterBtn">Закрыть</button>
+      <!-- <button class="btn-cancel" id="closeChartFooterBtn">Закрыть</button> -->
     </div>
   </div>
 
