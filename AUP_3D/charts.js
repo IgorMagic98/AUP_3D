@@ -7,19 +7,20 @@ let systemChartInstance = null;
 
 /**
  * Построение графика характеристики системы
- * H = Z_max + K_system * Q^2
+ * H = H_max + K_system * Q^2
  * 
  * @param {Object} data - данные для построения
  * @param {number} data.K_system - коэффициент сопротивления системы
- * @param {number} data.Z_max - максимальная геодезическая отметка (м)
- * @param {number} [data.Q_total] - текущий расход системы (л/с) — для отметки рабочей точки
- * @param {number} [data.H_source] - текущий напор источника (м) — для отметки рабочей точки
+ * @param {number} data.H_max - максимальная геодезическая отметка (м)
+ * @param {number} data.Q_total - текущий расход системы (л/с) — для отметки рабочей точки
+ * @param {number} data.H_source - текущий напор источника (м) — для отметки рабочей точки
  */
 function buildHydraulicChart(data) {
-    const { K_system, Z_max, Q_total, H_source } = data;
+    // alert(hghg)
+    const { K_system, H_max, Q_total, H_source } = data;
 
-    if (K_system === undefined || Z_max === undefined) {
-        console.error("❌ Не переданы K_system или Z_max");
+    if (K_system === undefined || H_max === undefined) {
+        console.error("❌ Не переданы K_system или H_max");
         return;
     }
 
@@ -34,7 +35,7 @@ function buildHydraulicChart(data) {
     }
 
     // =========================================================================
-    // Генерация точек для параболы системы: H = Z_max + K_system * Q^2
+    // Генерация точек для параболы системы: H = H_max + K_system * Q^2
     // =========================================================================
     const Q_data = [];
     const H_system = [];
@@ -47,7 +48,7 @@ function buildHydraulicChart(data) {
 
     for (let Q = 0; Q <= maxQ; Q += step) {
         Q_data.push(parseFloat(Q.toFixed(3)));
-        const H = Z_max + K_system * Q * Q;
+        const H = H_max + K_system * Q * Q;
         H_system.push(parseFloat(H.toFixed(4)));
     }
 
@@ -122,8 +123,8 @@ function buildHydraulicChart(data) {
                     type: "linear",
                     title: {
                         display: true,
-                        text: "Расход Q, л/с",
-                        font: { size: 13, weight: "bold" },
+                        text: "Q, л/с",
+                        font: { size: 14, weight: "bold" },
                     },
                     min: 0,
                     max: maxQ,
@@ -134,11 +135,11 @@ function buildHydraulicChart(data) {
                 y: {
                     title: {
                         display: true,
-                        text: "Напор H, м.вод.ст.",
-                        font: { size: 13, weight: "bold" },
+                        text: "H, м.вод.ст.",
+                        font: { size: 14, weight: "bold" },
                     },
                     min: 0,
-                    max: Math.max(H_source * 1.2, Z_max * 1.5, 50),
+                    max: Math.max(H_source * 1.2, H_max * 1.5, 50),
                     grid: {
                         color: "rgba(0, 0, 0, 0.05)",
                     },
@@ -147,7 +148,7 @@ function buildHydraulicChart(data) {
         },
     });
 
-    console.log(`✅ График построен: K_system=${K_system.toFixed(6)}, Z_max=${Z_max.toFixed(2)} м, maxQ=${maxQ.toFixed(2)}`);
+    console.log(`✅ График построен: K_system=${K_system.toFixed(6)}, H_max=${H_max.toFixed(2)} м, maxQ=${maxQ.toFixed(2)}`);
 }
 
 /**
@@ -159,11 +160,11 @@ function buildChartFromLastCalculation() {
     // после успешного расчета в new.js (window.lastCalculationResult)
     const data = window.lastCalculationResult || {};
 
-    if (!data.K_system || !data.Z_max) {
+    if (!data.K_system || !data.H_max) {
         console.warn("⚠️ Нет данных последнего расчета. Используются значения по умолчанию.");
         buildHydraulicChart({
             K_system: 0.025,
-            Z_max: 0,
+            H_max: 0,
             Q_total: 10,
             H_source: 30,
         });
@@ -172,7 +173,7 @@ function buildChartFromLastCalculation() {
 
     buildHydraulicChart({
         K_system: data.K_system,
-        Z_max: data.Z_max,
+        H_max: data.H_max,
         Q_total: data.Q_total,
         H_source: data.H_source,
     });
@@ -182,6 +183,9 @@ function buildChartFromLastCalculation() {
  * Инициализация обработчиков событий для модального окна графика
  * Вызывается один раз при загрузке страницы
  */
+/**
+ * Инициализация обработчиков событий для модального окна графика
+ */
 function initChartModal() {
     const menuBtn = document.getElementById("menuShowSystemCurve");
     const modal = document.getElementById("chartModal");
@@ -189,12 +193,13 @@ function initChartModal() {
     const closeBtn = document.getElementById("closeChartBtn");
     const closeFooterBtn = document.getElementById("closeChartFooterBtn");
     const updateBtn = document.getElementById("updateChartBtn");
+    // ✅ Получаем новую кнопку
+    const fullscreenBtn = document.getElementById("toggleChartFullscreenBtn");
 
     function showModal() {
         if (!modal || !overlay) return;
         modal.style.display = "block";
         overlay.style.display = "block";
-        // Небольшая задержка, чтобы Canvas успел получить размеры
         setTimeout(buildChartFromLastCalculation, 50);
     }
 
@@ -202,6 +207,22 @@ function initChartModal() {
         if (!modal || !overlay) return;
         modal.style.display = "none";
         overlay.style.display = "none";
+        // ✅ При закрытии выключаем полноэкранный режим, если он был включен
+        modal.classList.remove("is-fullscreen");
+    }
+
+    // ✅ Логика кнопки "На весь экран"
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener("click", () => {
+            modal.classList.toggle("is-fullscreen");
+            
+            // Даем браузеру 100мс на применение CSS-стилей, затем заставляем график перерисоваться
+            setTimeout(() => {
+                if (systemChartInstance) {
+                    systemChartInstance.resize();
+                }
+            }, 100);
+        });
     }
 
     if (menuBtn) menuBtn.addEventListener("click", showModal);

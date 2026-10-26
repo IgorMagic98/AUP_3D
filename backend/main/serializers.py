@@ -26,7 +26,7 @@ class EdgeSerializer(serializers.Serializer):
 class ALlSerializer(serializers.Serializer):
     Node = NodeSerializer(many=True)
     Edge = EdgeSerializer(many=True)
-    
+    pressure_sprinkler = serializers.FloatField()
     def validate(self, data):
         """Дополнительная проверка целостности графа"""
         node_ids = {str(n['id']) for n in data['Node']}

@@ -7,5 +7,6 @@ from .views import new
 
 urlpatterns = [
     path('api/sole/', new, name='solve'),
+    path('api/', include('api.urls')), 
     path('admin/', admin.site.urls),  
 ]
